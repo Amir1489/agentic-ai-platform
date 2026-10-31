@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session as DBSession
+from .ai_provider import AIProviderError, AIProviderNotConfigured, generate_reply
 from .auth import current_session
 from .database import get_db
 from .models import ChatMessage, Conversation, Session as LoginSession, User
@@ -53,18 +54,40 @@ def list_messages(conversation_id: int, auth: tuple[User, LoginSession] = Depend
 
 
 @router.post("/{conversation_id}/messages", status_code=201)
-def save_message(conversation_id: int, data: MessageInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+def send_message(conversation_id: int, data: MessageInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
     row = owned_conversation(conversation_id, auth[0].id, db)
     content = data.content.strip()
     if not content:
         raise HTTPException(status_code=422, detail="Message cannot be empty")
-    message = ChatMessage(conversation_id=row.id, role="user", content=content)
-    db.add(message)
-    if row.title == "New conversation":
+
+    user_message = ChatMessage(conversation_id=row.id, role="user", content=content)
+    db.add(user_message)
+    if row.title in ("New conversation", "گفتگوی جدید"):
         row.title = content[:80]
     db.commit()
-    db.refresh(message)
-    return {"id": message.id, "role": message.role, "content": message.content, "created": message.created_at.isoformat(), "notice": "Message saved. AI responses will be enabled after a model provider is configured."}
+    db.refresh(user_message)
+
+    history = db.scalars(
+        select(ChatMessage).where(ChatMessage.conversation_id == row.id)
+        .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc()).limit(20)
+    ).all()
+    history.reverse()
+    payload = [{"role": item.role, "content": item.content} for item in history]
+    try:
+        answer = generate_reply(payload)
+    except AIProviderNotConfigured:
+        raise HTTPException(status_code=503, detail="AI provider is not configured. Set AI_API_KEY on the backend.")
+    except AIProviderError:
+        raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable.")
+
+    assistant_message = ChatMessage(conversation_id=row.id, role="assistant", content=answer)
+    db.add(assistant_message)
+    db.commit()
+    db.refresh(assistant_message)
+    return {
+        "user_message": {"id": user_message.id, "role": user_message.role, "content": user_message.content, "created": user_message.created_at.isoformat()},
+        "assistant_message": {"id": assistant_message.id, "role": assistant_message.role, "content": assistant_message.content, "created": assistant_message.created_at.isoformat()},
+    }
 
 
 @router.delete("/{conversation_id}", status_code=204)
