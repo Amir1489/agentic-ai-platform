@@ -1,0 +1,46 @@
+name: Production smoke checks
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke-checks
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check deployed frontend
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url = "https://amir1489.github.io/agentic-ai-platform/"
+          request = urllib.request.Request(url, headers={"User-Agent": "agentic-platform-smoke-check/1.0"})
+          with urllib.request.urlopen(request, timeout=20) as response:
+              body = response.read(2_000_000).decode("utf-8", errors="replace")
+              assert response.status == 200, f"Frontend returned HTTP {response.status}"
+              assert '<div id="root">' in body, "Frontend root element was not found"
+          print("Frontend smoke check: PASS")
+          PY
+
+      - name: Check backend health endpoint
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+          url = "https://agentic-ai-platform-api.onrender.com/api/health"
+          request = urllib.request.Request(url, headers={"User-Agent": "agentic-platform-smoke-check/1.0"})
+          with urllib.request.urlopen(request, timeout=45) as response:
+              payload = json.loads(response.read().decode("utf-8"))
+              assert response.status == 200, f"Backend returned HTTP {response.status}"
+              assert payload.get("status") == "ok", f"Unexpected health payload: {payload}"
+              assert payload.get("service") == "agentic-ai-platform", f"Unexpected service: {payload}"
+          print("Backend health smoke check: PASS")
+          PY
