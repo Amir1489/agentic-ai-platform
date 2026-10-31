@@ -76,3 +76,26 @@
 :root[data-theme="dark"] .dash-nav.active{color:color-mix(in srgb,var(--user-accent,#4988e7) 65%,white)}
 :root[data-theme="dark"] .chat-item.active,:root[data-theme="dark"] .chat-bubble.user,:root[data-theme="dark"] .dash-project-icon{background:color-mix(in srgb,var(--user-accent,#4988e7) 24%,#24364d)}
 :root[data-theme="dark"] .palette-settings{border-color:color-mix(in srgb,var(--user-accent,#4988e7) 35%,#3a4e67)}
+
+/* Unified custom palette across BOTH themes and every app screen. */
+:root{--user-accent:#4988e7;--user-background:#eef5ff;--user-surface:#ffffff;--user-text:#263f60;--user-accent-soft:color-mix(in srgb,var(--user-accent) 14%,var(--user-surface));--user-border:color-mix(in srgb,var(--user-text) 16%,transparent)}
+html,body{background:var(--user-background)!important;color:var(--user-text)!important}
+body,.app,.welcome-page,.dash{background-color:var(--user-background)!important;color:var(--user-text)!important}
+.hero h1,.welcome-card h1,.dash,.dash-heading h1,.dash-project-info strong,.palette-settings,.dialog,.welcome-card{color:var(--user-text)}
+.hero-copy>p,.welcome-card p,.welcome-card>small,.dash-heading p,.dash-disclaimer,.dash-top,.dash-project-info small,.dialog p{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))}
+.glass,.nav,.floating,.mini,.welcome-card,.dialog,.dash-side,.dash-panel,.dash-card,.palette-settings{background:color-mix(in srgb,var(--user-surface) 88%,transparent)!important;color:var(--user-text)!important;border-color:var(--user-border)}
+.primary,.sign,.auth-submit,.dash-create,.welcome-continue{background:var(--user-accent)!important;color:white!important;border-color:transparent!important}
+.brand-light,.features svg,.dialog svg,.dash-logo,.dash-card>svg,.dash-nav.active,.dash-nav:hover{color:var(--user-accent)!important}
+.brand-icon,.auth-symbol,.welcome-mark,.sparkle,.dash-project-icon,.chat-item.active,.chat-bubble.user,.dash-avatar{background:var(--user-accent-soft)!important;color:var(--user-accent)!important;border-color:var(--user-border)}
+.badge,.secondary,.welcome-language,.welcome-language button,.palette-reset,.palette-preset{background:var(--user-accent-soft)!important;color:var(--user-text)!important;border-color:var(--user-border)}
+.dash-nav.active{background:var(--user-accent-soft)!important;color:var(--user-accent)!important}
+.palette-color{border-color:var(--user-border)!important;color:var(--user-text)}
+.palette-heading p,.palette-color code{color:color-mix(in srgb,var(--user-text) 70%,var(--user-background))}
+.theme-toggle{background:var(--user-surface)!important;color:var(--user-accent)!important;border-color:var(--user-border)!important}
+/* Theme mode changes contrast effects only; chosen palette colors remain active in both modes. */
+:root[data-theme="dark"] .glass,:root[data-theme="dark"] .nav,:root[data-theme="dark"] .floating,:root[data-theme="dark"] .mini,:root[data-theme="dark"] .welcome-card,:root[data-theme="dark"] .dialog,:root[data-theme="dark"] .dash-side,:root[data-theme="dark"] .dash-panel,:root[data-theme="dark"] .dash-card,:root[data-theme="dark"] .palette-settings{background:color-mix(in srgb,var(--user-surface) 88%,transparent)!important;color:var(--user-text)!important}
+:root[data-theme="dark"] .hero h1,:root[data-theme="dark"] .welcome-card h1,:root[data-theme="dark"] .dash,:root[data-theme="dark"] .dash-heading h1,:root[data-theme="dark"] .dash-project-info strong,:root[data-theme="dark"] .dialog,:root[data-theme="dark"] .welcome-card{color:var(--user-text)!important}
+:root[data-theme="dark"] .hero-copy>p,:root[data-theme="dark"] .welcome-card p,:root[data-theme="dark"] .welcome-card>small,:root[data-theme="dark"] .dash-heading p,:root[data-theme="dark"] .dash-disclaimer,:root[data-theme="dark"] .dash-top,:root[data-theme="dark"] .dash-project-info small,:root[data-theme="dark"] .dialog p{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))!important}
+:root[data-theme="dark"] .badge,:root[data-theme="dark"] .secondary,:root[data-theme="dark"] .welcome-language,:root[data-theme="dark"] .welcome-language button,:root[data-theme="dark"] .palette-reset,:root[data-theme="dark"] .palette-preset{background:var(--user-accent-soft)!important;color:var(--user-text)!important}
+:root[data-theme="dark"] .dash-nav.active{background:var(--user-accent-soft)!important;color:var(--user-accent)!important}
+:root[data-theme="dark"] .brand-icon,:root[data-theme="dark"] .auth-symbol,:root[data-theme="dark"] .welcome-mark,:root[data-theme="dark"] .sparkle,:root[data-theme="dark"] .dash-project-icon,:root[data-theme="dark"] .chat-item.active,:root[data-theme="dark"] .chat-bubble.user,:root[data-theme="dark"] .dash-avatar{background:var(--user-accent-soft)!important;color:var(--user-accent)!important}
