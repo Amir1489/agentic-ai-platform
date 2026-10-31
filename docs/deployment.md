@@ -1,28 +1,48 @@
-# Deploy the API and database
+# Deployment
 
-The frontend is hosted on GitHub Pages. The backend needs its own HTTPS server and persistent PostgreSQL database.
+The frontend is hosted on GitHub Pages. The FastAPI backend is hosted separately on Render and uses Supabase PostgreSQL.
 
-## Database
-Create a PostgreSQL database with your chosen provider. Copy its connection URL **privately**; do not paste it into the repository or frontend settings.
+## Database (Supabase)
 
-## Render
-1. In Render, choose New > Blueprint and connect this GitHub repository.
-2. Render will read the root-level `render.yaml` and configure a Python web service from the `backend` directory.
-3. Supply `DATABASE_URL` as a private environment variable. Use a valid PostgreSQL connection URL and SSL according to the provider's documentation.
-4. Set `CORS_ORIGINS` to `https://amir1489.github.io` (already provided as a default in the Blueprint).
-5. Deploy the service, then check `https://YOUR-RENDER-SERVICE/api/health`. It should return `{"status":"ok","service":"agentic-ai-platform"}`.
+1. Open the project's Connect panel.
+2. Select the Session Pooler connection method and copy its URI.
+3. Store the URI privately as the Render `DATABASE_URL` environment variable.
+4. If the database password changes, update Render's environment variable and redeploy the backend.
 
-## Connect frontend
-1. In GitHub repository Settings > Secrets and variables > Actions > Variables, add `VITE_API_URL` with the **public HTTPS origin** of the Render backend, without a trailing slash. This is not a secret.
-2. Re-run **Deploy frontend to GitHub Pages**. The build embeds `VITE_API_URL`.
-3. Register a test account, log in, create a project, refresh, and verify persistence. Try a second test account and verify it cannot see the first user's projects.
+Never paste database credentials into source files, GitHub commits, frontend variables or public issue trackers.
 
-## Troubleshooting
-- **Backend fails to start**: inspect Render logs; verify `DATABASE_URL` and database network/SSL settings.
-- **CORS blocked**: verify `CORS_ORIGINS` matches the exact frontend origin (scheme and hostname).
-- **Frontend says backend not configured**: verify `VITE_API_URL` is a GitHub Actions *variable* and re-run the frontend workflow.
-- **503 or delayed first request**: check service health and any idle/spin-down policy.
-- **Tables missing**: check database permissions and backend startup logs.
+## Backend (Render)
 
-## Production limitations
-The current application is an alpha. Before public registration, add email verification, password reset, rate limiting, database migrations, monitoring and a durable session strategy. Database tables are currently bootstrapped with SQLAlchemy `create_all`, which does not migrate existing tables. Review hosting costs and service plan availability in your provider account; no free tier is assumed.
+The root-level `render.yaml` defines the FastAPI web service.
+
+Required environment variables:
+
+- `DATABASE_URL`: private PostgreSQL Session Pooler URI.
+- `CORS_ORIGINS`: exact frontend origin, currently `https://amir1489.github.io`.
+
+The health endpoint is `/api/health` and should return a JSON status response.
+
+## Frontend (GitHub Pages)
+
+1. In repository Settings → Secrets and variables → Actions → Variables, set `VITE_API_URL` to the public HTTPS backend origin, without a trailing slash.
+2. Run the **Deploy frontend to GitHub Pages** workflow after changing the variable.
+3. Confirm the workflow completes successfully.
+
+`VITE_API_URL` is public build-time configuration, not a secret. Never put passwords, private API keys or session tokens in any `VITE_*` variable.
+
+## Smoke test
+
+1. Open the deployed frontend.
+2. Register a test account and sign in.
+3. Create a project.
+4. Refresh and confirm the session and project are restored.
+5. Return to Home, refresh, and confirm Home remains selected.
+6. Sign in with a second account and verify project isolation.
+7. Log out and confirm protected API routes reject the old token.
+
+## Known operational limitations
+
+- Render free services may spin down while idle, causing a delay on the first request.
+- SQLAlchemy `create_all` bootstraps tables but does not migrate existing schemas. Add Alembic before evolving production schemas.
+- Email verification, password reset, rate limiting, monitoring and production abuse protections are not implemented.
+- Browser bearer tokens are stored in localStorage in this alpha release.
