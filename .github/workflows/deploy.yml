@@ -23,6 +23,7 @@ jobs:
       - run: npm run build
         working-directory: frontend
         env:
+          # Inject the Render API base URL from the repository Actions variable.
           VITE_API_URL: ${{ vars.VITE_API_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
