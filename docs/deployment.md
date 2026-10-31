@@ -20,7 +20,7 @@ Required environment variables:
 - `DATABASE_URL`: private PostgreSQL Session Pooler URI.
 - `CORS_ORIGINS`: exact frontend origin, currently `https://amir1489.github.io`.
 
-The process health endpoint is `/api/health`. The dependency readiness endpoint `/api/ready` performs a database `SELECT 1`. `/api/capabilities` reports only whether AI-backed features are configured.
+The process health endpoint is `/api/health`. Render's configured health check uses `/api/ready`, which performs a database `SELECT 1` and returns HTTP 503 when the database is unavailable. `/api/capabilities` reports only whether AI-backed features are configured.
 
 ## Frontend (GitHub Pages)
 
