@@ -1,0 +1,26 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Bot, Plus, Trash2, LoaderCircle, Pause, Play } from 'lucide-react';
+
+type Agent = { id:number; name:string; description:string; instructions:string; model:string; status:'draft'|'active'|'paused'; created:string; updated:string };
+type Lang = 'fa'|'en';
+const labels = {
+ fa:{title:'ایجنت‌های من',new:'ایجنت جدید',empty:'هنوز ایجنتی نساختی.',name:'نام ایجنت',description:'توضیحات',instructions:'دستورالعمل سیستم',model:'مدل',create:'ساخت ایجنت',cancel:'انصراف',draft:'پیش‌نویس',active:'فعال',paused:'متوقف',error:'ارتباط با سرور ناموفق بود.',remove:'حذف ایجنت',confirm:'این ایجنت حذف شود؟',pause:'توقف',resume:'فعال‌سازی'},
+ en:{title:'My agents',new:'New agent',empty:'You have not created an agent yet.',name:'Agent name',description:'Description',instructions:'System instructions',model:'Model',create:'Create agent',cancel:'Cancel',draft:'Draft',active:'Active',paused:'Paused',error:'Could not connect to the server.',remove:'Delete agent',confirm:'Delete this agent?',pause:'Pause',resume:'Activate'}
+};
+export default function AgentsPanel({lang,token}:{lang:Lang;token?:string|null}) {
+ const t=labels[lang], api=import.meta.env.VITE_API_URL?.replace(/\/$/,'');
+ const [agents,setAgents]=useState<Agent[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [open,setOpen]=useState(false),[name,setName]=useState(''),[description,setDescription]=useState(''),[instructions,setInstructions]=useState(''),[model,setModel]=useState('gpt-4o-mini');
+ const headers={Authorization:'Bearer '+(token||''),'Content-Type':'application/json'};
+ const load=useCallback(async()=>{if(!api||!token)return;try{const r=await fetch(api+'/api/agents',{headers});if(!r.ok)throw Error();setAgents(await r.json())}catch{setError(t.error)}},[api,token,t.error]);
+ useEffect(()=>{void load()},[load]);
+ async function create(e:React.FormEvent){e.preventDefault();if(!api||!token||busy||!name.trim())return;setBusy(true);setError('');try{const r=await fetch(api+'/api/agents',{method:'POST',headers,body:JSON.stringify({name,description,instructions,model})});if(!r.ok)throw Error();const a:Agent=await r.json();setAgents(v=>[a,...v]);setOpen(false);setName('');setDescription('');setInstructions('')}catch{setError(t.error)}finally{setBusy(false)}}
+ async function changeStatus(agent:Agent){if(!api||!token||busy)return;setBusy(true);try{const status=agent.status==='active'?'paused':'active';const r=await fetch(api+'/api/agents/'+agent.id,{method:'PUT',headers,body:JSON.stringify({...agent,status})});if(!r.ok)throw Error();const updated:Agent=await r.json();setAgents(v=>v.map(x=>x.id===agent.id?updated:x))}catch{setError(t.error)}finally{setBusy(false)}}
+ async function remove(agent:Agent){if(!api||!token||busy||!window.confirm(t.confirm))return;setBusy(true);try{const r=await fetch(api+'/api/agents/'+agent.id,{method:'DELETE',headers});if(!r.ok)throw Error();setAgents(v=>v.filter(x=>x.id!==agent.id))}catch{setError(t.error)}finally{setBusy(false)}}
+ return <section className="dash-panel" dir={lang==='fa'?'rtl':'ltr'}>
+  <div className="dash-heading"><div><h2>{t.title}</h2></div><button className="dash-create" onClick={()=>setOpen(true)} disabled={busy}><Plus size={18}/>{t.new}</button></div>
+  {error&&<p role="alert" style={{color:'#bb3355'}}>{error}</p>}
+  {agents.length===0?<div className="dash-empty"><Bot size={36}/><p>{t.empty}</p></div>:<div className="dash-projects">{agents.map(a=><article className="dash-project" key={a.id}><div className="dash-project-icon"><Bot size={20}/></div><div className="dash-project-info"><strong>{a.name}</strong><small>{a.description||a.model} · {t[a.status]}</small></div><button className="dash-delete" onClick={()=>void changeStatus(a)} disabled={busy} aria-label={a.status==='active'?t.pause:t.resume} title={a.status==='active'?t.pause:t.resume}>{a.status==='active'?<Pause size={17}/>:<Play size={17}/>}</button><button className="dash-delete" onClick={()=>void remove(a)} disabled={busy} aria-label={t.remove} title={t.remove}><Trash2 size={17}/></button></article>)}</div>}
+  {open&&<div className="dash-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}><form className="dash-modal glass" onSubmit={create}><h2>{t.new}</h2><label>{t.name}<input required maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></label><label>{t.description}<input maxLength={500} value={description} onChange={e=>setDescription(e.target.value)}/></label><label>{t.instructions}<textarea maxLength={4000} rows={4} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label><label>{t.model}<input required maxLength={100} value={model} onChange={e=>setModel(e.target.value)}/></label><div className="dash-modal-actions"><button type="button" onClick={()=>setOpen(false)}>{t.cancel}</button><button className="dash-create" disabled={busy}><Plus size={16}/>{busy?<LoaderCircle size={16}/>:t.create}</button></div></form></div>}
+ </section>;
+}
