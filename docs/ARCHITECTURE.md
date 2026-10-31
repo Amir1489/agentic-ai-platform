@@ -82,3 +82,10 @@ All project and conversation endpoints require an authenticated session and scop
 ## Public capability status
 - `GET /api/capabilities` returns only booleans for `chat` and `agent_tasks`, derived from whether a private `AI_API_KEY` is configured.
 - It never returns the key, base URL, provider response or secret values. The settings screen uses it to display whether AI features are configured.
+
+
+## Database migrations
+- Alembic is configured under `backend/migrations`.
+- The initial revision uses `Base.metadata.create_all` as an idempotent adoption baseline so existing installations are not dropped or recreated; it creates missing tables on a fresh database.
+- Render runs `alembic upgrade head` before starting Uvicorn.
+- The initial baseline is forward-only. Future schema changes must be implemented as explicit Alembic revisions; `create_all` remains a compatibility fallback and does not alter existing columns.
