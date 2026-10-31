@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session as DBSession
 from .auth import current_session, digest, issue_session, password_hash
 from .database import Base, engine, get_db
 from .models import User, Session as LoginSession
+from .projects import router as projects_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,7 +18,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic AI Platform API", version="0.2.0", lifespan=lifespan)
 origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,https://amir1489.github.io").split(",") if origin.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "DELETE"], allow_headers=["Authorization", "Content-Type"])
 
 class Credentials(BaseModel):
     email: EmailStr
@@ -62,3 +63,5 @@ def me(auth: tuple[User, LoginSession] = Depends(current_session)):
 def logout(auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
     db.delete(auth[1])
     db.commit()
+
+app.include_router(projects_router)
