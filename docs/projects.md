@@ -22,3 +22,16 @@ Do not place database passwords, API keys or bearer tokens in GitHub Actions var
 ## Current limitations
 
 The project list/create/delete flow is implemented. AI agents, conversations and workflow execution are not implemented in the dashboard yet. Database migrations and production abuse protections are also pending.
+
+
+## Conversations API
+
+All endpoints require the same bearer authentication as projects.
+
+- `GET /api/conversations` lists the signed-in user's conversations.
+- `POST /api/conversations` creates a conversation with an optional title.
+- `GET /api/conversations/{id}/messages` returns its message history.
+- `POST /api/conversations/{id}/messages` stores a user message (up to 12,000 characters).
+- `DELETE /api/conversations/{id}` deletes the conversation and its messages.
+
+Conversation ownership is checked on every operation. Messages are persisted, but AI-generated replies are not enabled yet; a model provider must be securely configured before the chat can generate responses.
