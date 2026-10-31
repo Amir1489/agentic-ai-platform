@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic AI Platform API", version="0.2.0", lifespan=lifespan)
 origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,https://amir1489.github.io").split(",") if origin.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "DELETE"], allow_headers=["Authorization", "Content-Type"])
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["Authorization", "Content-Type"])
 
 class Credentials(BaseModel):
     email: EmailStr
