@@ -6,7 +6,7 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 
 ## Overall progress
 
-**Estimated implementation progress: 45%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 49%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -14,9 +14,9 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 | Authentication and accounts | 65% | Register/login/session/logout tests pass; verification, reset, safer cookie sessions and throttling remain |
 | Projects | 75% | User-scoped CRUD and isolation tests exist; pagination and richer project workflows remain |
 | Persistent chat | 75% | Conversation/message APIs, ownership, atomic persistence and UI exist; provider config and end-to-end browser tests remain |
-| Agent creation/runtime | 35% | Owner-scoped agent create/list/update/delete APIs and dashboard UI exist; execution engine, tool permissions and durable runs remain |
+| Agent creation/runtime | 55% | Owner-scoped agent CRUD, dashboard controls, single-step model execution, durable task records and audit events exist; queues, cancellation, budgets and tool orchestration remain |
 | Tools and integrations | 0% | Not implemented |
-| Workflow orchestration | 0% | Not implemented |
+| Workflow orchestration | 0% | Multi-step workflows, branching and replay are not implemented; current agent runs are single-step model calls |
 | Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
 | Security and operations | 25% | Password hashing, hashed session tokens, ownership checks; rate limits, monitoring, secret rotation, CSP and abuse controls remain |
 | Automated quality gates | 65% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
@@ -35,6 +35,17 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — First bounded agent execution path
+- Added durable agent task records and append-only started/succeeded/failed event records.
+- Added `POST /api/agents/{id}/tasks` for a single-step model execution; only owner-owned agents in `active` state can run.
+- Added task history and per-task event history endpoints.
+- Agent instructions and description are passed as a bounded system prompt; user input is capped at 8,000 characters and output at 12,000 characters.
+- Provider-unavailable requests are rejected before task creation; provider failures mark persisted tasks as failed.
+- No tools, shell execution, background worker, retries, cancellation, cost budget or multi-step planning are available yet.
+- Backend and frontend CI for the new execution path is pending final runs.
+
+
 
 ### 2026-10-31 — Database readiness and production monitoring
 - Added `/api/ready`, a database connectivity probe that runs `SELECT 1` and returns HTTP 503 when the database is unavailable.
