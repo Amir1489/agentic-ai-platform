@@ -116,3 +116,37 @@ def test_agent_crud_and_owner_isolation():
         assert client.delete(f"/api/agents/{agent_id}", headers=headers_b).status_code == 404
         assert client.delete(f"/api/agents/{agent_id}", headers=headers_a).status_code == 204
         assert client.get("/api/agents", headers=headers_a).json() == []
+
+
+def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypatch):
+    import app.agents as agents
+
+    with TestClient(app) as client:
+        registered = client.post("/api/auth/register", json={
+            "email": "agent-runner@example.com",
+            "password": "secure-test-password-123"
+        })
+        assert registered.status_code == 201
+        headers = {"Authorization": "Bearer " + registered.json()["token"]}
+        created = client.post("/api/agents", headers=headers, json={
+            "name": "Study helper", "description": "Helps explain topics",
+            "instructions": "Explain clearly.", "model": "gpt-4o-mini"
+        })
+        agent_id = created.json()["id"]
+        monkeypatch.setattr(agents, "is_configured", lambda: True)
+        blocked = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Explain fractions"})
+        assert blocked.status_code == 409
+        activated = client.put(f"/api/agents/{agent_id}", headers=headers, json={
+            "name": "Study helper", "description": "Helps explain topics",
+            "instructions": "Explain clearly.", "model": "gpt-4o-mini", "status": "active"
+        })
+        assert activated.status_code == 200
+        monkeypatch.setattr(agents, "generate_reply", lambda messages, system_prompt=None: "Fractions represent parts of a whole.")
+        result = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Explain fractions"})
+        assert result.status_code == 201, result.text
+        task = result.json()
+        assert task["status"] == "succeeded"
+        assert task["output"].startswith("Fractions represent")
+        history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers)
+        assert history.status_code == 200
+        assert history.json()[0]["id"] == task["id"]
