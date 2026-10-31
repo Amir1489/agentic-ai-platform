@@ -150,3 +150,6 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
         history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers)
         assert history.status_code == 200
         assert history.json()[0]["id"] == task["id"]
+        events = client.get(f"/api/agents/{agent_id}/tasks/{task['id']}/events", headers=headers)
+        assert events.status_code == 200
+        assert [event["type"] for event in events.json()] == ["started", "succeeded"]
