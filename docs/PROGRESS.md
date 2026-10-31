@@ -2,11 +2,11 @@
 
 Last updated: 2026-10-31 (UTC)
 Current branch: `main`
-Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest CI configuration commit: `85687db07667b0168c9b120429518676983134fb`\nLatest application-code commit with verified CI: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
+Latest documentation commit: pending\nLatest CI configuration commit: `85687db07667b0168c9b120429518676983134fb`\nLatest application-code commit with verified CI: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
 
 ## Overall progress
 
-**Estimated implementation progress: 39%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 43%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -14,7 +14,7 @@ Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest 
 | Authentication and accounts | 65% | Register/login/session/logout tests pass; verification, reset, safer cookie sessions and throttling remain |
 | Projects | 75% | User-scoped CRUD and isolation tests exist; pagination and richer project workflows remain |
 | Persistent chat | 75% | Conversation/message APIs, ownership, atomic persistence and UI exist; provider config and end-to-end browser tests remain |
-| Agent creation/runtime | 5% | Dashboard placeholder; agent lifecycle and execution engine not built |
+| Agent creation/runtime | 35% | Owner-scoped agent create/list/update/delete APIs and dashboard UI exist; execution engine, tool permissions and durable runs remain |
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Not implemented |
 | Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
@@ -24,6 +24,10 @@ Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest 
 
 ## Current verified CI / deployment
 
+- Agent CRUD backend tests: **PASS** — [run 41236112302](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236112302), including ownership isolation and lifecycle state updates.
+- Earlier CI configuration checks: backend tests and frontend Pages deploy **PASS** — [backend run 41235967420](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235967420), [frontend run 41235963845](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235963845).
+- Agent dashboard UI build is currently queued/in progress; do not count it as passed until completed.
+
 For commit `fe68d11`:
 - Backend API tests: **PASS** — [run 41235453094](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235453094)
 - Frontend build and GitHub Pages deployment: **PASS** — [run 41235453092](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235453092)
@@ -31,6 +35,16 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Agent management foundation
+- Added persistent Agent model and authenticated, owner-scoped CRUD endpoints at `/api/agents`.
+- Added draft/active/paused lifecycle metadata; updates validate and persist configuration.
+- Added agent dashboard panel for create, list, status toggle and delete.
+- Added backend tests covering user isolation and lifecycle changes.
+- Agent activation is configuration state only: no agent runtime or external tool execution exists yet.
+- Backend API tests passed in run 41236112302; frontend build is pending in run 41236136257.
+
+
 
 ### 2026-10-31 — Chat stability and CI verification
 - Updated `frontend/src/ChatPanel.tsx` to coordinate create/send/delete actions, disable conflicting controls, avoid duplicate submissions, and make deletion state explicit.
