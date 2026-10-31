@@ -153,3 +153,34 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
         events = client.get(f"/api/agents/{agent_id}/tasks/{task['id']}/events", headers=headers)
         assert events.status_code == 200
         assert [event["type"] for event in events.json()] == ["started", "succeeded"]
+
+
+def test_agent_provider_failure_is_recorded(monkeypatch):
+    import app.agents as agents
+    from app.ai_provider import AIProviderError
+
+    with TestClient(app) as client:
+        registered = client.post("/api/auth/register", json={
+            "email": "agent-failure@example.com",
+            "password": "secure-test-password-123"
+        })
+        headers = {"Authorization": "Bearer " + registered.json()["token"]}
+        created = client.post("/api/agents", headers=headers, json={
+            "name": "Fallback agent", "description": "", "instructions": "",
+            "model": "gpt-4o-mini"
+        })
+        agent_id = created.json()["id"]
+        client.put(f"/api/agents/{agent_id}", headers=headers, json={
+            "name": "Fallback agent", "description": "", "instructions": "",
+            "model": "gpt-4o-mini", "status": "active"
+        })
+        monkeypatch.setattr(agents, "is_configured", lambda: True)
+        def fail_provider(messages, system_prompt=None):
+            raise AIProviderError("provider unavailable")
+        monkeypatch.setattr(agents, "generate_reply", fail_provider)
+        failed = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Run this"})
+        assert failed.status_code == 502
+        history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers).json()
+        assert history[0]["status"] == "failed"
+        events = client.get(f"/api/agents/{agent_id}/tasks/{history[0]['id']}/events", headers=headers).json()
+        assert [event["type"] for event in events] == ["started", "failed"]
