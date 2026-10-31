@@ -24,6 +24,14 @@ def test_health_and_account_isolation():
             })
             assert response.status_code == 201, response.text
             users.append(response.json()["token"])
+        login_ok = client.post("/api/auth/login", json={"email": "tester1@example.com", "password": "secure-test-password-123"})
+        assert login_ok.status_code == 200
+        login_token = login_ok.json()["token"]
+        assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {login_token}"}).json()["email"] == "tester1@example.com"
+        login_bad = client.post("/api/auth/login", json={"email": "tester1@example.com", "password": "incorrect-password-123"})
+        assert login_bad.status_code == 401
+        login_too_long = client.post("/api/auth/login", json={"email": "tester1@example.com", "password": "x" * 129})
+        assert login_too_long.status_code == 422
         headers_a = {"Authorization": f"Bearer {users[0]}"}
         headers_b = {"Authorization": f"Bearer {users[1]}"}
         project = client.post("/api/projects", headers=headers_a, json={"name": "My project"})
