@@ -8,6 +8,7 @@ A bilingual Persian/English Agentic AI workspace built with React, Vite and Fast
 - User registration, login, session validation and logout.
 - PostgreSQL-backed user accounts and projects.
 - Per-user project isolation.
+- Persistent, account-scoped conversations and message history.
 - Dashboard route and selected-tab persistence across refreshes.
 - Frontend deployment through GitHub Pages.
 - FastAPI backend deployment through Render.
