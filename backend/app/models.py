@@ -44,3 +44,16 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(20))
     content: Mapped[str] = mapped_column(String(12000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class Agent(Base):
+    __tablename__ = "agents"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(String(500), default="")
+    instructions: Mapped[str] = mapped_column(String(4000), default="")
+    model: Mapped[str] = mapped_column(String(100), default="gpt-4o-mini")
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
