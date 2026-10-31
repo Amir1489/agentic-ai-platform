@@ -6,7 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSession
 from .auth import current_session
 from .database import get_db
-from .models import Agent, Session as LoginSession, User
+from .models import Agent, AgentTask, AgentTaskEvent, Session as LoginSession, User
+from .ai_provider import AIProviderError, is_configured, generate_reply
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 
@@ -71,3 +72,58 @@ def delete_agent(agent_id: int, auth: tuple[User, LoginSession] = Depends(curren
     agent = owned_agent(agent_id, auth[0].id, db)
     db.delete(agent)
     db.commit()
+
+
+class AgentRunInput(BaseModel):
+    input: str = Field(min_length=1, max_length=8000)
+
+def serialize_task(task: AgentTask):
+    return {
+        "id": task.id, "agent_id": task.agent_id, "input": task.input,
+        "output": task.output, "status": task.status, "error": task.error,
+        "created": task.created_at.isoformat(), "updated": task.updated_at.isoformat()
+    }
+
+@router.get("/{agent_id}/tasks")
+def list_agent_tasks(agent_id: int, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+    owned_agent(agent_id, auth[0].id, db)
+    rows = db.scalars(select(AgentTask).where(
+        AgentTask.agent_id == agent_id, AgentTask.owner_id == auth[0].id
+    ).order_by(AgentTask.created_at.desc()).limit(50)).all()
+    return [serialize_task(row) for row in rows]
+
+@router.post("/{agent_id}/tasks", status_code=201)
+def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+    agent = owned_agent(agent_id, auth[0].id, db)
+    prompt = data.input.strip()
+    if not prompt:
+        raise HTTPException(status_code=422, detail="Task input is required")
+    if agent.status != "active":
+        raise HTTPException(status_code=409, detail="Agent must be active before it can run")
+    if not is_configured():
+        raise HTTPException(status_code=503, detail="AI provider is not configured")
+    task = AgentTask(agent_id=agent.id, owner_id=auth[0].id, input=prompt, status="running")
+    db.add(task)
+    db.flush()
+    db.add(AgentTaskEvent(task_id=task.id, event_type="started", detail="Single-step model execution started"))
+    db.commit()
+    db.refresh(task)
+    system_prompt = agent.instructions.strip() or "You are a helpful, safe, concise AI agent. Reply in the user's language."
+    system_prompt += "\\n\\nAgent description: " + agent.description[:500]
+    try:
+        output = generate_reply([{"role": "user", "content": prompt}], system_prompt=system_prompt)
+        task.output = output[:12000]
+        task.status = "succeeded"
+        task.error = ""
+        task.updated_at = datetime.now(timezone.utc)
+        db.add(AgentTaskEvent(task_id=task.id, event_type="succeeded", detail="Model response stored"))
+        db.commit()
+        db.refresh(task)
+        return serialize_task(task)
+    except AIProviderError:
+        task.status = "failed"
+        task.error = "The AI provider request failed"
+        task.updated_at = datetime.now(timezone.utc)
+        db.add(AgentTaskEvent(task_id=task.id, event_type="failed", detail=task.error))
+        db.commit()
+        raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable")
