@@ -228,3 +228,19 @@ def test_expired_session_is_rejected_and_removed():
         assert response.status_code == 401
         with SessionLocal() as db:
             assert db.scalar(select(LoginSession).where(LoginSession.token_hash == digest(token))) is None
+
+
+def test_cors_preflight_allows_agent_update():
+    with TestClient(app) as client:
+        response = client.options(
+            "/api/agents/1",
+            headers={
+                "Origin": "https://amir1489.github.io",
+                "Access-Control-Request-Method": "PUT",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        assert response.status_code == 200, response.text
+        allowed_methods = response.headers.get("access-control-allow-methods", "")
+        assert "PUT" in allowed_methods
+        assert response.headers.get("access-control-allow-origin") == "https://amir1489.github.io"
