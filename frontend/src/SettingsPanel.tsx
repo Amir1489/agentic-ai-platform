@@ -7,7 +7,7 @@ const copy={fa:{account:'حساب کاربری',email:'ایمیل حساب',secu
 export default function SettingsPanel({lang,email}:{lang:Lang;email?:string}) {
  const t=copy[lang],api=import.meta.env.VITE_API_URL?.replace(/\/$/,'');
  const [caps,setCaps]=useState<Capabilities|null>(null),[error,setError]=useState('');
- useEffect(()=>{if(!api)return;let alive=true;fetch(api+'/api/capabilities').then(async r=>{if(!r.ok)throw Error();return r.json()}).then(v=>{if(alive)setCaps(v)}).catch(()=>{if(alive)setError(t.error)});return()=>{alive=false}},[api,t.error]);
+ useEffect(()=>{if(!api){setError(t.error);return}let alive=true;fetch(api+'/api/capabilities').then(async r=>{if(!r.ok)throw Error();return r.json()}).then(v=>{if(alive)setCaps(v)}).catch(()=>{if(alive)setError(t.error)});return()=>{alive=false}},[api,t.error]);
  return <section className="dash-panel" dir={lang==='fa'?'rtl':'ltr'}>
   <div className="dash-project"><div className="dash-project-icon"><UserCircle2/></div><div className="dash-project-info"><strong>{t.account}</strong><small>{t.email}: {email||'—'}</small></div></div>
   <div className="dash-project"><div className="dash-project-icon"><ShieldCheck/></div><div className="dash-project-info"><strong>{t.security}</strong><small>{t.securityText}</small></div></div>
