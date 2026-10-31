@@ -6,7 +6,7 @@ Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-plat
 
 ## Overall progress
 
-**Estimated implementation progress: 54%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 56%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -17,12 +17,15 @@ Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-plat
 | Agent creation/runtime | 63% | Owner-scoped agent CRUD, dashboard controls, single-step model execution, durable task records and audit events exist; queues, cancellation, budgets and tool orchestration remain |
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Multi-step workflows, branching and replay are not implemented; current agent runs are single-step model calls |
-| Database reliability/migrations | 40% | Alembic baseline and repeatable migration CI added; backup/restore drills, explicit future revisions and production migration verification remain |
-| Security and operations | 30% | Password hashing, hashed session tokens, owner checks, safe capability status and DB readiness; rate limits, secure cookies, monitoring, CSP and abuse controls remain |
-| Automated quality gates | 70% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
+| Database reliability/migrations | 45% | Alembic baseline and repeatable migration CI added; backup/restore drills, explicit future revisions and production migration verification remain |
+| Security and operations | 33% | Password hashing, hashed session tokens, owner checks, safe capability status and DB readiness; rate limits, secure cookies, monitoring, CSP and abuse controls remain |
+| Automated quality gates | 75% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
 | Documentation | 68% | README, architecture, roadmap, agent API guide and progress/release log; operational runbooks and release checklist remain |
 
 ## Current verified CI / deployment
+
+- Live production smoke: **PASS** — deployed GitHub Pages frontend returned the expected app shell, Render `/api/health` passed, and Render `/api/ready` confirmed database connectivity — [run 41237092058](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41237092058).
+
 
 - Persisted agent task history UI build and GitHub Pages deployment: **PASS** — [run 41236934388](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236934388).
 
@@ -50,6 +53,15 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Live production smoke verification
+- Triggered the production smoke workflow on the latest monitoring configuration.
+- Deployed frontend responded with the expected root app shell.
+- Render backend health endpoint returned the expected service status.
+- Render database readiness endpoint returned ready/reachable.
+- This verifies service and database connectivity at the time of the run; it does not verify live AI provider credentials or actual model execution.
+
+
 
 ### 2026-10-31 — Persisted task history in dashboard
 - Agent cards now fetch and display recent persisted task runs after reload.
