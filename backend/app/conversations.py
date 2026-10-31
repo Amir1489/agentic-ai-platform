@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session as DBSession
-from .ai_provider import AIProviderError, AIProviderNotConfigured, generate_reply
+from .ai_provider import AIProviderError, AIProviderNotConfigured, generate_reply, is_configured
 from .auth import current_session
 from .database import get_db
 from .models import ChatMessage, Conversation, Session as LoginSession, User
@@ -59,6 +59,8 @@ def send_message(conversation_id: int, data: MessageInput, auth: tuple[User, Log
     content = data.content.strip()
     if not content:
         raise HTTPException(status_code=422, detail="Message cannot be empty")
+    if not is_configured():
+        raise HTTPException(status_code=503, detail="AI provider is not configured. Set AI_API_KEY on the backend.")
 
     user_message = ChatMessage(conversation_id=row.id, role="user", content=content)
     db.add(user_message)
