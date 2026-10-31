@@ -109,9 +109,9 @@ def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession
     db.commit()
     db.refresh(task)
     system_prompt = agent.instructions.strip() or "You are a helpful, safe, concise AI agent. Reply in the user's language."
-    system_prompt += "\\n\\nAgent description: " + agent.description[:500]
+    system_prompt += "\n\nAgent description: " + agent.description[:500]
     try:
-        output = generate_reply([{"role": "user", "content": prompt}], system_prompt=system_prompt)
+        output = generate_reply([{"role": "user", "content": prompt}], system_prompt=system_prompt, model=agent.model)
         task.output = output[:12000]
         task.status = "succeeded"
         task.error = ""
@@ -121,11 +121,14 @@ def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession
         db.refresh(task)
         return serialize_task(task)
     except Exception:
-        task.status = "failed"
-        task.error = "The AI provider request failed"
-        task.updated_at = datetime.now(timezone.utc)
-        db.add(AgentTaskEvent(task_id=task.id, event_type="failed", detail=task.error))
-        db.commit()
+        db.rollback()
+        failed_task = db.get(AgentTask, task.id)
+        if failed_task is not None:
+            failed_task.status = "failed"
+            failed_task.error = "The AI provider request failed"
+            failed_task.updated_at = datetime.now(timezone.utc)
+            db.add(AgentTaskEvent(task_id=failed_task.id, event_type="failed", detail=failed_task.error))
+            db.commit()
         raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable")
 
 
