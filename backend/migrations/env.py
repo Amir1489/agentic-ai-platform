@@ -12,9 +12,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 def database_url():
-    url = os.environ.get("DATABASE_URL")
-    if not url:
-        raise RuntimeError("DATABASE_URL must be set before running migrations")
+    url = os.environ.get("DATABASE_URL", "sqlite:///./dev.db")
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+psycopg://", 1)
     elif url.startswith("postgresql://"):
