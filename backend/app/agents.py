@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session as DBSession
 from .auth import current_session
 from .database import get_db
 from .models import Agent, AgentTask, AgentTaskEvent, Session as LoginSession, User
-from .ai_provider import AIProviderError, is_configured, generate_reply
+from .ai_provider import is_configured, generate_reply
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 
@@ -120,10 +120,25 @@ def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession
         db.commit()
         db.refresh(task)
         return serialize_task(task)
-    except AIProviderError:
+    except Exception:
         task.status = "failed"
         task.error = "The AI provider request failed"
         task.updated_at = datetime.now(timezone.utc)
         db.add(AgentTaskEvent(task_id=task.id, event_type="failed", detail=task.error))
         db.commit()
         raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable")
+
+
+@router.get("/{agent_id}/tasks/{task_id}/events")
+def list_task_events(agent_id: int, task_id: int, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+    owned_agent(agent_id, auth[0].id, db)
+    task = db.scalar(select(AgentTask).where(
+        AgentTask.id == task_id, AgentTask.agent_id == agent_id, AgentTask.owner_id == auth[0].id
+    ))
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    events = db.scalars(select(AgentTaskEvent).where(
+        AgentTaskEvent.task_id == task.id
+    ).order_by(AgentTaskEvent.created_at, AgentTaskEvent.id)).all()
+    return [{"id": event.id, "type": event.event_type, "detail": event.detail,
+             "created": event.created_at.isoformat()} for event in events]
