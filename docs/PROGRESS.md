@@ -6,7 +6,7 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 
 ## Overall progress
 
-**Estimated implementation progress: 43%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 45%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -19,7 +19,7 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 | Workflow orchestration | 0% | Not implemented |
 | Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
 | Security and operations | 25% | Password hashing, hashed session tokens, ownership checks; rate limits, monitoring, secret rotation, CSP and abuse controls remain |
-| Automated quality gates | 60% | Backend pytest and frontend TypeScript/Vite build run in CI; browser E2E, accessibility, dependency and security scans remain |
+| Automated quality gates | 65% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
 | Documentation | 50% | Setup/API docs exist; this log, roadmap, architecture, test and release procedures are being expanded |
 
 ## Current verified CI / deployment
@@ -35,6 +35,14 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Database readiness and production monitoring
+- Added `/api/ready`, a database connectivity probe that runs `SELECT 1` and returns HTTP 503 when the database is unavailable.
+- Added readiness coverage to backend API tests.
+- Extended the scheduled production smoke workflow to verify frontend, backend health and backend database readiness every six hours.
+- The scheduled smoke workflow has not yet been observed running; live production readiness remains unverified.
+
+
 
 ### 2026-10-31 — Agent management foundation
 - Added persistent Agent model and authenticated, owner-scoped CRUD endpoints at `/api/agents`.
