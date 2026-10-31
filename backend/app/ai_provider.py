@@ -1,0 +1,43 @@
+import json
+import os
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+
+class AIProviderNotConfigured(Exception):
+    pass
+
+
+class AIProviderError(Exception):
+    pass
+
+
+def generate_reply(messages: list[dict[str, str]]) -> str:
+    api_key = os.getenv("AI_API_KEY", "").strip()
+    if not api_key:
+        raise AIProviderNotConfigured("AI provider is not configured")
+    base_url = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+    model = os.getenv("AI_MODEL", "gpt-4o-mini").strip()
+    payload = json.dumps({
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful, safe, concise assistant. Reply in the language used by the user."},
+            *messages[-20:],
+        ],
+        "temperature": 0.7,
+    }).encode("utf-8")
+    request = Request(
+        base_url + "/chat/completions",
+        data=payload,
+        headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=45) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        content = data["choices"][0]["message"]["content"]
+        if not isinstance(content, str) or not content.strip():
+            raise AIProviderError("The model returned an empty response")
+        return content.strip()[:12000]
+    except (HTTPError, URLError, TimeoutError, KeyError, IndexError, ValueError, json.JSONDecodeError) as exc:
+        raise AIProviderError("The AI provider request failed") from exc
