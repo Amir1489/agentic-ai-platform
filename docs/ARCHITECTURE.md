@@ -67,3 +67,13 @@ All project and conversation endpoints require an authenticated session and scop
 ## Health and readiness
 - `GET /api/health` is a process-level health response and does not verify dependencies.
 - `GET /api/ready` performs a lightweight `SELECT 1` using the configured SQLAlchemy engine and returns HTTP 503 on database errors. It does not expose connection strings or credentials.
+
+
+## Agent task execution (single-step MVP)
+- `POST /api/agents/{agent_id}/tasks` runs one model response for an owned agent whose status is `active`.
+- Input is capped at 8,000 characters; generated output is capped at 12,000 characters; provider timeout is 45 seconds.
+- Task records persist `running`, `succeeded` or `failed` status. Events record `started`, `succeeded` or `failed` transitions.
+- `GET /api/agents/{agent_id}/tasks` returns up to 50 recent task records.
+- `GET /api/agents/{agent_id}/tasks/{task_id}/events` returns the task audit trail.
+- This is deliberately not a general-purpose tool runner: no shell, code interpreter, network fetch, external integrations or arbitrary tool execution is available.
+- Known runtime gaps: synchronous HTTP execution, no worker queue, no cancellation, no cost/token budgets, no retry policy, no stuck-running recovery and no human approval workflow.
