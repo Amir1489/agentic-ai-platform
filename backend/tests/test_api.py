@@ -144,7 +144,7 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
             "instructions": "Explain clearly.", "model": "gpt-4o-mini", "status": "active"
         })
         assert activated.status_code == 200
-        monkeypatch.setattr(agents, "generate_reply", lambda messages, system_prompt=None: "Fractions represent parts of a whole.")
+        monkeypatch.setattr(agents, "generate_reply", lambda messages, system_prompt=None, model=None: "Fractions represent parts of a whole.")
         result = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Explain fractions"})
         assert result.status_code == 201, result.text
         task = result.json()
@@ -178,7 +178,7 @@ def test_agent_provider_failure_is_recorded(monkeypatch):
             "model": "gpt-4o-mini", "status": "active"
         })
         monkeypatch.setattr(agents, "is_configured", lambda: True)
-        def fail_provider(messages, system_prompt=None):
+        def fail_provider(messages, system_prompt=None, model=None):
             raise AIProviderError("provider unavailable")
         monkeypatch.setattr(agents, "generate_reply", fail_provider)
         failed = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Run this"})
