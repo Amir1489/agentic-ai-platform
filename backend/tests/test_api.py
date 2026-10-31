@@ -11,6 +11,9 @@ from app.main import app
 def test_health_and_account_isolation():
     with TestClient(app) as client:
         assert client.get("/api/health").status_code == 200
+        capabilities = client.get("/api/capabilities")
+        assert capabilities.status_code == 200
+        assert set(capabilities.json()) == {"chat", "agent_tasks"}
         assert client.get("/api/ready").json() == {"status": "ready", "database": "reachable"}
         assert client.get("/api/projects").status_code == 401
         users = []
