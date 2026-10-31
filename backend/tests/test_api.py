@@ -106,6 +106,8 @@ def test_agent_crud_and_owner_isolation():
             "instructions": "Be accurate and cite uncertainty.",
             "model": "gpt-4o-mini"
         }
+        invalid_model = client.post("/api/agents", headers=headers_a, json={**payload, "model": "   "})
+        assert invalid_model.status_code == 422
         created = client.post("/api/agents", headers=headers_a, json=payload)
         assert created.status_code == 201, created.text
         agent_id = created.json()["id"]
