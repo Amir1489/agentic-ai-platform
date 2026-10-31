@@ -154,12 +154,19 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
             "instructions": "Explain clearly.", "model": "gpt-4o-mini", "status": "active"
         })
         assert activated.status_code == 200
-        seen = {}\n        def fake_reply(messages, system_prompt=None, model=None):\n            seen["model"] = model\n            seen["system_prompt"] = system_prompt\n            return "Fractions represent parts of a whole."\n        monkeypatch.setattr(agents, "generate_reply", fake_reply)
+        seen = {}
+        def fake_reply(messages, system_prompt=None, model=None):
+            seen["model"] = model
+            seen["system_prompt"] = system_prompt
+            return "Fractions represent parts of a whole."
+        monkeypatch.setattr(agents, "generate_reply", fake_reply)
         result = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Explain fractions"})
         assert result.status_code == 201, result.text
         task = result.json()
         assert task["status"] == "succeeded"
-        assert task["output"].startswith("Fractions represent")\n        assert seen["model"] == "gpt-4o-mini"\n        assert "Explain clearly." in seen["system_prompt"]
+        assert task["output"].startswith("Fractions represent")
+        assert seen["model"] == "gpt-4o-mini"
+        assert "Explain clearly." in seen["system_prompt"]
         history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers)
         assert history.status_code == 200
         assert history.json()[0]["id"] == task["id"]
