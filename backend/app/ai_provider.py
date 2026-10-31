@@ -16,7 +16,7 @@ def is_configured() -> bool:
     return bool(os.getenv("AI_API_KEY", "").strip())
 
 
-def generate_reply(messages: list[dict[str, str]]) -> str:
+def generate_reply(messages: list[dict[str, str]], system_prompt: str | None = None) -> str:
     api_key = os.getenv("AI_API_KEY", "").strip()
     if not api_key:
         raise AIProviderNotConfigured("AI provider is not configured")
@@ -25,7 +25,7 @@ def generate_reply(messages: list[dict[str, str]]) -> str:
     payload = json.dumps({
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are a helpful, safe, concise assistant. Reply in the language used by the user."},
+            {"role": "system", "content": (system_prompt or "You are a helpful, safe, concise assistant. Reply in the language used by the user.")[:4000]},
             *messages[-20:],
         ],
         "temperature": 0.7,
