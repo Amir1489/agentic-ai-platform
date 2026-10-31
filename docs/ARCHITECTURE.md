@@ -53,3 +53,12 @@ All project and conversation endpoints require an authenticated session and scop
 - No migration framework.
 - No confirmed production database/provider smoke test from this repository workflow.
 - Agent, tool and workflow runtime are not implemented.
+
+
+## Agent management API (added 2026-10-31)
+- `GET /api/agents`: list the authenticated user's agents.
+- `POST /api/agents`: create an agent in `draft` state.
+- `PUT /api/agents/{id}`: update name, description, instructions, model and lifecycle state (`draft`, `active`, `paused`).
+- `DELETE /api/agents/{id}`: delete an owned agent.
+- Every endpoint requires a valid bearer session and scopes reads/writes by `owner_id`.
+- Important boundary: `active` is currently metadata only. It does not launch a worker or execute model/tool actions; runtime is a later roadmap phase.
