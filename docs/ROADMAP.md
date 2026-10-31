@@ -30,10 +30,11 @@ Acceptance criteria:
 - Add email verification, password reset, session revocation, rate limiting and secure cookie strategy before production.
 
 ## Phase 2 — Agent management
-**Status: not implemented**
+**Status: partially implemented**
 
 Acceptance criteria:
-- Create, list, edit, pause, resume and delete agents.
+- [x] Create, list, edit, pause, resume and delete agent configuration records.
+- [ ] Add full form validation, pagination and robust browser E2E coverage.
 - Agent configuration is validated server-side and scoped to its owner.
 - Agent identity, model selection, system instructions, enabled tools and limits are persisted.
 - Draft and active states are distinct.
