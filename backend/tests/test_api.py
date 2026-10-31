@@ -197,3 +197,27 @@ def test_agent_provider_failure_is_recorded(monkeypatch):
         assert history[0]["status"] == "failed"
         events = client.get(f"/api/agents/{agent_id}/tasks/{history[0]['id']}/events", headers=headers).json()
         assert [event["type"] for event in events] == ["started", "failed"]
+
+
+def test_expired_session_is_rejected_and_removed():
+    from datetime import datetime, timedelta, timezone
+    from sqlalchemy import select
+    from app.auth import digest
+    from app.database import SessionLocal
+    from app.models import Session as LoginSession
+
+    with TestClient(app) as client:
+        registered = client.post("/api/auth/register", json={
+            "email": "expired-session@example.com",
+            "password": "secure-test-password-123"
+        })
+        token = registered.json()["token"]
+        with SessionLocal() as db:
+            session = db.scalar(select(LoginSession).where(LoginSession.token_hash == digest(token)))
+            assert session is not None
+            session.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+            db.commit()
+        response = client.get("/api/auth/me", headers={"Authorization": "Bearer " + token})
+        assert response.status_code == 401
+        with SessionLocal() as db:
+            assert db.scalar(select(LoginSession).where(LoginSession.token_hash == digest(token))) is None
