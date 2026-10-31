@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-31 (UTC)
 Current branch: `main`
-Current verified commit: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
+Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest application-code commit with verified CI: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
 
 ## Overall progress
 
