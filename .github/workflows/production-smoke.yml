@@ -1,6 +1,12 @@
 name: Production smoke checks
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-smoke.yml'
+      - 'render.yaml'
+      - 'backend/app/**'
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
