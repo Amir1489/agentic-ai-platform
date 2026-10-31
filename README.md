@@ -42,7 +42,7 @@ Set `DATABASE_URL` to PostgreSQL for persistent data. SQLite is intended only fo
 - Backend: Render (see `render.yaml`).
 - Database: Supabase PostgreSQL.
 
-See [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md), and [projects API](docs/projects.md).
+See [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md), [projects API](docs/projects.md), [architecture decisions](docs/ARCHITECTURE.md), [product roadmap](docs/ROADMAP.md), and the [engineering progress and release log](docs/PROGRESS.md).
 
 ## Important limitations
 
