@@ -59,7 +59,7 @@
 .dash-heading p,.dash-disclaimer,.dash-project-info small,.dash-top{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))!important}
 .dash-create{background:var(--user-accent)!important;color:#fff!important}
 .dash-nav.active,.dash-project-icon{background:color-mix(in srgb,var(--user-accent) 14%,var(--user-surface))!important;color:var(--user-accent)!important}
-:root[data-theme="dark"] .dash,.:root[data-theme="dark"] .dash-body,:root[data-theme="dark"] .dash-main{background-color:var(--user-background)!important;color:var(--user-text)!important}
+:root[data-theme="dark"] .dash,:root[data-theme="dark"] .dash-body,:root[data-theme="dark"] .dash-main{background-color:var(--user-background)!important;color:var(--user-text)!important}
 :root[data-theme="dark"] .dash-side,:root[data-theme="dark"] .dash-panel,:root[data-theme="dark"] .dash-card,:root[data-theme="dark"] .dash-modal{background:color-mix(in srgb,var(--user-surface) 90%,transparent)!important;color:var(--user-text)!important;border-color:color-mix(in srgb,var(--user-text) 16%,transparent)!important}
 :root[data-theme="dark"] .dash-heading h1,:root[data-theme="dark"] .dash-project-info strong,:root[data-theme="dark"] .dash-modal h2,:root[data-theme="dark"] .dash-modal label{color:var(--user-text)!important}
 :root[data-theme="dark"] .dash-heading p,:root[data-theme="dark"] .dash-disclaimer,:root[data-theme="dark"] .dash-project-info small,:root[data-theme="dark"] .dash-top{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))!important}
