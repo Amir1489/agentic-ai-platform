@@ -6,23 +6,26 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 
 ## Overall progress
 
-**Estimated implementation progress: 53%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 54%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
 | Landing page and responsive UI | 85% | React/Vite bilingual UI exists; visual/accessibility browser audit remains |
-| Authentication and accounts | 65% | Register/login/session/logout tests pass; verification, reset, safer cookie sessions and throttling remain |
+| Authentication and accounts | 68% | Register/login/session/logout tests pass; verification, reset, safer cookie sessions and throttling remain |
 | Projects | 75% | User-scoped CRUD and isolation tests exist; pagination and richer project workflows remain |
 | Persistent chat | 75% | Conversation/message APIs, ownership, atomic persistence and UI exist; provider config and end-to-end browser tests remain |
-| Agent creation/runtime | 60% | Owner-scoped agent CRUD, dashboard controls, single-step model execution, durable task records and audit events exist; queues, cancellation, budgets and tool orchestration remain |
+| Agent creation/runtime | 63% | Owner-scoped agent CRUD, dashboard controls, single-step model execution, durable task records and audit events exist; queues, cancellation, budgets and tool orchestration remain |
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Multi-step workflows, branching and replay are not implemented; current agent runs are single-step model calls |
 | Database reliability/migrations | 40% | Alembic baseline and repeatable migration CI added; backup/restore drills, explicit future revisions and production migration verification remain |
 | Security and operations | 30% | Password hashing, hashed session tokens, owner checks, safe capability status and DB readiness; rate limits, secure cookies, monitoring, CSP and abuse controls remain |
 | Automated quality gates | 70% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
-| Documentation | 65% | README, architecture, roadmap, agent API guide and progress/release log; operational runbooks and release checklist remain |
+| Documentation | 68% | README, architecture, roadmap, agent API guide and progress/release log; operational runbooks and release checklist remain |
 
 ## Current verified CI / deployment
+
+- Persisted agent task history UI build and GitHub Pages deployment: **PASS** — [run 41236934388](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236934388).
+
 
 - Alembic baseline repeated twice against a clean SQLite database and backend API suite: **PASS** — [run 41236687579](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236687579).
 
@@ -47,6 +50,14 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Persisted task history in dashboard
+- Agent cards now fetch and display recent persisted task runs after reload.
+- New task results are added to the local task-history view immediately after successful execution.
+- Added responsive styling for task input/output and history records.
+- Frontend production build and GitHub Pages deployment passed in run 41236934388.
+
+
 
 ### 2026-10-31 — Database migration baseline
 - Added Alembic configuration, environment, initial idempotent schema baseline and revision template.
