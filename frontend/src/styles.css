@@ -69,3 +69,10 @@
 :root[data-theme="dark"] .palette-color,:root[data-theme="dark"] .palette-preset{border-color:#40536b}
 :root[data-theme="dark"] .palette-reset{background:#2a3d56;color:#d0e0f4}
 @media(max-width:540px){.palette-grid{grid-template-columns:1fr}.palette-color{flex-wrap:wrap}}
+
+/* Keep the chosen accent visible in dark mode while preserving readable dark surfaces. */
+:root[data-theme="dark"] .primary,:root[data-theme="dark"] .sign,:root[data-theme="dark"] .auth-submit,:root[data-theme="dark"] .dash-create{background:linear-gradient(135deg,color-mix(in srgb,var(--user-accent,#4988e7) 72%,#26384f),var(--user-accent,#4988e7));}
+:root[data-theme="dark"] .brand-light,:root[data-theme="dark"] .brand-icon,:root[data-theme="dark"] .features svg,:root[data-theme="dark"] .dialog svg,:root[data-theme="dark"] .dash-card svg{color:color-mix(in srgb,var(--user-accent,#4988e7) 78%,white)}
+:root[data-theme="dark"] .dash-nav.active{color:color-mix(in srgb,var(--user-accent,#4988e7) 65%,white)}
+:root[data-theme="dark"] .chat-item.active,:root[data-theme="dark"] .chat-bubble.user,:root[data-theme="dark"] .dash-project-icon{background:color-mix(in srgb,var(--user-accent,#4988e7) 24%,#24364d)}
+:root[data-theme="dark"] .palette-settings{border-color:color-mix(in srgb,var(--user-accent,#4988e7) 35%,#3a4e67)}
