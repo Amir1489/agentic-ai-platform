@@ -2,11 +2,11 @@
 
 Last updated: 2026-10-31 (UTC)
 Current branch: `main`
-Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest application-code commit with verified CI: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
+Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest operations workflow commit: `43717df8c45c4084aa6dce718484194454d5f934`\nLatest application-code commit with verified CI: `fe68d11b0ffe792b9d46e85afa37ed12ce4fee3a`
 
 ## Overall progress
 
-**Estimated implementation progress: 38%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 39%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -18,8 +18,8 @@ Latest documentation commit: `36e02cd26618e04b05721b0221b98d6b61353bb2`\nLatest 
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Not implemented |
 | Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
-| Security and operations | 20% | Password hashing, hashed session tokens, ownership checks; rate limits, monitoring, secret rotation, CSP and abuse controls remain |
-| Automated quality gates | 55% | Backend pytest and frontend TypeScript/Vite build run in CI; browser E2E, accessibility, dependency and security scans remain |
+| Security and operations | 25% | Password hashing, hashed session tokens, ownership checks; rate limits, monitoring, secret rotation, CSP and abuse controls remain |
+| Automated quality gates | 60% | Backend pytest and frontend TypeScript/Vite build run in CI; browser E2E, accessibility, dependency and security scans remain |
 | Documentation | 50% | Setup/API docs exist; this log, roadmap, architecture, test and release procedures are being expanded |
 
 ## Current verified CI / deployment
