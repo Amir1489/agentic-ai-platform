@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
@@ -62,19 +63,15 @@ def send_message(conversation_id: int, data: MessageInput, auth: tuple[User, Log
     if not is_configured():
         raise HTTPException(status_code=503, detail="AI provider is not configured. Set AI_API_KEY on the backend.")
 
-    user_message = ChatMessage(conversation_id=row.id, role="user", content=content)
-    db.add(user_message)
-    if row.title in ("New conversation", "گفتگوی جدید"):
-        row.title = content[:80]
-    db.commit()
-    db.refresh(user_message)
-
-    history = db.scalars(
+    # Build context without persisting a user message until the provider succeeds.
+    previous = db.scalars(
         select(ChatMessage).where(ChatMessage.conversation_id == row.id)
-        .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc()).limit(20)
+        .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc()).limit(19)
     ).all()
-    history.reverse()
-    payload = [{"role": item.role, "content": item.content} for item in history]
+    previous.reverse()
+    payload = [{"role": item.role, "content": item.content} for item in previous]
+    payload.append({"role": "user", "content": content})
+
     try:
         answer = generate_reply(payload)
     except AIProviderNotConfigured:
@@ -82,15 +79,19 @@ def send_message(conversation_id: int, data: MessageInput, auth: tuple[User, Log
     except AIProviderError:
         raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable.")
 
+    user_message = ChatMessage(conversation_id=row.id, role="user", content=content)
     assistant_message = ChatMessage(conversation_id=row.id, role="assistant", content=answer)
-    db.add(assistant_message)
+    db.add_all([user_message, assistant_message])
+    if row.title in ("New conversation", "گفتگوی جدید"):
+        row.title = content[:80]
+    row.updated_at = datetime.now(timezone.utc)
     db.commit()
+    db.refresh(user_message)
     db.refresh(assistant_message)
     return {
         "user_message": {"id": user_message.id, "role": user_message.role, "content": user_message.content, "created": user_message.created_at.isoformat()},
         "assistant_message": {"id": assistant_message.id, "role": assistant_message.role, "content": assistant_message.content, "created": assistant_message.created_at.isoformat()},
     }
-
 
 @router.delete("/{conversation_id}", status_code=204)
 def delete_conversation(conversation_id: int, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
