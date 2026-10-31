@@ -14,7 +14,8 @@ Acceptance criteria:
 - GitHub Pages deployment completes.
 - [x] Render health endpoint responds successfully in production (scheduled smoke workflow configured; live check pending).
 - [x] Database readiness endpoint is implemented and covered by backend tests; live Supabase connectivity remains to be confirmed.
-- Supabase connection is verified without exposing credentials.
+- [ ] Supabase production connection is verified without exposing credentials.
+- [x] Alembic baseline migration runs before Render startup and is repeatable in CI.
 - CORS allows only explicitly configured frontend origins.
 
 ## Phase 1 — Accounts, projects, conversations
