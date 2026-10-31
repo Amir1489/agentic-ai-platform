@@ -41,10 +41,11 @@ def list_agents(auth: tuple[User, LoginSession] = Depends(current_session), db: 
 @router.post("", status_code=201)
 def create_agent(data: AgentInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
     name = data.name.strip()
-    if not name:
-        raise HTTPException(status_code=422, detail="Agent name is required")
+    model = data.model.strip()
+    if not name or not model:
+        raise HTTPException(status_code=422, detail="Agent name and model are required")
     agent = Agent(owner_id=auth[0].id, name=name, description=data.description.strip(),
-                  instructions=data.instructions.strip(), model=data.model.strip(), status="draft")
+                  instructions=data.instructions.strip(), model=model, status="draft")
     db.add(agent)
     db.commit()
     db.refresh(agent)
