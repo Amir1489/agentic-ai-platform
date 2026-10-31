@@ -30,7 +30,7 @@ class Credentials(BaseModel):
 
 class LoginCredentials(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=10, max_length=128)
 
 def public_user(user: User) -> dict:
     return {"id": user.id, "email": user.email}
