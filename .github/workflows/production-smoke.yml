@@ -65,3 +65,18 @@ jobs:
               assert payload.get("database") == "reachable", f"Database is not reachable: {payload}"
           print("Backend database readiness smoke check: PASS")
           PY
+
+      - name: Check AI capability configuration (without exposing secrets)
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+          url = "https://agentic-ai-platform-api.onrender.com/api/capabilities"
+          request = urllib.request.Request(url, headers={"User-Agent": "agentic-platform-smoke-check/1.0"})
+          with urllib.request.urlopen(request, timeout=45) as response:
+              payload = json.loads(response.read().decode("utf-8"))
+              assert response.status == 200
+              assert isinstance(payload.get("chat"), bool)
+              assert isinstance(payload.get("agent_tasks"), bool)
+          print("AI capability configuration:", payload)
+          PY
