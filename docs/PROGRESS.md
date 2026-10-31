@@ -18,9 +18,9 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Multi-step workflows, branching and replay are not implemented; current agent runs are single-step model calls |
 | Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
-| Security and operations | 25% | Password hashing, hashed session tokens, ownership checks; rate limits, monitoring, secret rotation, CSP and abuse controls remain |
+| Security and operations | 28% | Password hashing, hashed session tokens, owner checks, safe capability status and DB readiness; rate limits, secure cookies, monitoring, CSP and abuse controls remain |
 | Automated quality gates | 65% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
-| Documentation | 50% | Setup/API docs exist; this log, roadmap, architecture, test and release procedures are being expanded |
+| Documentation | 60% | README, architecture, roadmap, agent API guide and progress/release log; operational runbooks and release checklist remain |
 
 ## Current verified CI / deployment
 
