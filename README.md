@@ -35,6 +35,7 @@ For local development, copy `.env.example` to `.env.local` and set `VITE_API_URL
 ```bash
 cd backend
 pip install -r requirements-dev.txt
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
