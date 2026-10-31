@@ -18,3 +18,10 @@
 
 /* Prevent long account names and project labels from escaping narrow layouts. */
 .dash,.dash-body,.dash-main,.dash-side,.dash-panel,.dash-card{min-width:0;max-width:100%}.dash-top{min-width:0;gap:10px}.dash-top>span:first-child{min-width:0;overflow-wrap:anywhere}.dash-top-actions{flex-shrink:0}.dash-heading>div{min-width:0}.dash-heading h1,.dash-heading p,.dash-project-info strong{overflow-wrap:anywhere}.dash-project,.dash-project-info{min-width:0}.dash-project-info{overflow:hidden}.dash-nav{min-width:max-content}@media(max-width:540px){.dash{padding:8px}.dash-side{padding:9px}.dash-side nav{max-width:100%;padding-bottom:3px}.dash-nav{flex:0 0 auto}.dash-top{padding:10px 6px 14px}.dash-main{padding:8px 2px}.dash-panel{padding:18px 14px}.dash-project{gap:9px;padding:10px}.dash-modal{max-width:100%;min-width:0;padding:22px}.dash-modal input{min-width:0;max-width:100%}.dash-modal-actions{flex-wrap:wrap}.dash-modal-actions button{flex:1}}
+
+
+.agent-task{margin-top:10px;padding:10px 12px;border:1px solid var(--line, #d9e2ec);border-radius:12px;background:#ffffff55;min-width:0;overflow:hidden}
+.agent-task small{display:block;font-size:.76rem;opacity:.75;overflow-wrap:anywhere}
+.agent-task p{margin:6px 0 0;font-size:.86rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-height:150px;overflow:auto}
+:root[data-theme="dark"] .agent-task{background:#17263a;border-color:#3a4e67}
+.agent-task textarea{width:100%;max-width:100%;margin-top:8px;resize:vertical;box-sizing:border-box}
