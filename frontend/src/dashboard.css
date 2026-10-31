@@ -51,3 +51,15 @@
 :root[data-theme="dark"] .dash-nav.active{color:color-mix(in srgb,var(--user-accent,#4988e7) 65%,white)}
 :root[data-theme="dark"] .chat-item.active,:root[data-theme="dark"] .chat-bubble.user,:root[data-theme="dark"] .dash-project-icon{background:color-mix(in srgb,var(--user-accent,#4988e7) 24%,#24364d)}
 :root[data-theme="dark"] .palette-settings{border-color:color-mix(in srgb,var(--user-accent,#4988e7) 35%,#3a4e67)}
+
+/* Dashboard palette parity: custom colors apply in light and dark themes. */
+.dash,.dash-body,.dash-main{background-color:var(--user-background)!important;color:var(--user-text)!important}
+.dash-side,.dash-panel,.dash-card,.dash-modal{background:color-mix(in srgb,var(--user-surface) 90%,transparent)!important;color:var(--user-text)!important;border-color:color-mix(in srgb,var(--user-text) 16%,transparent)!important}
+.dash-heading h1,.dash-project-info strong,.dash-modal h2,.dash-modal label{color:var(--user-text)!important}
+.dash-heading p,.dash-disclaimer,.dash-project-info small,.dash-top{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))!important}
+.dash-create{background:var(--user-accent)!important;color:#fff!important}
+.dash-nav.active,.dash-project-icon{background:color-mix(in srgb,var(--user-accent) 14%,var(--user-surface))!important;color:var(--user-accent)!important}
+:root[data-theme="dark"] .dash,.:root[data-theme="dark"] .dash-body,:root[data-theme="dark"] .dash-main{background-color:var(--user-background)!important;color:var(--user-text)!important}
+:root[data-theme="dark"] .dash-side,:root[data-theme="dark"] .dash-panel,:root[data-theme="dark"] .dash-card,:root[data-theme="dark"] .dash-modal{background:color-mix(in srgb,var(--user-surface) 90%,transparent)!important;color:var(--user-text)!important;border-color:color-mix(in srgb,var(--user-text) 16%,transparent)!important}
+:root[data-theme="dark"] .dash-heading h1,:root[data-theme="dark"] .dash-project-info strong,:root[data-theme="dark"] .dash-modal h2,:root[data-theme="dark"] .dash-modal label{color:var(--user-text)!important}
+:root[data-theme="dark"] .dash-heading p,:root[data-theme="dark"] .dash-disclaimer,:root[data-theme="dark"] .dash-project-info small,:root[data-theme="dark"] .dash-top{color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))!important}
