@@ -82,3 +82,36 @@ def test_conversation_isolation_and_atomic_chat(monkeypatch):
         listing = client.get("/api/conversations", headers=headers_a).json()
         assert listing[0]["title"] == "Hello"
         assert listing[0]["message_count"] == 2
+
+
+def test_agent_crud_and_owner_isolation():
+    with TestClient(app) as client:
+        tokens = []
+        for index in (5, 6):
+            response = client.post("/api/auth/register", json={
+                "email": f"agent{index}@example.com",
+                "password": "secure-test-password-123"
+            })
+            assert response.status_code == 201, response.text
+            tokens.append(response.json()["token"])
+        headers_a = {"Authorization": f"Bearer {tokens[0]}"}
+        headers_b = {"Authorization": f"Bearer {tokens[1]}"}
+        payload = {
+            "name": "Research helper",
+            "description": "Summarizes supplied research",
+            "instructions": "Be accurate and cite uncertainty.",
+            "model": "gpt-4o-mini"
+        }
+        created = client.post("/api/agents", headers=headers_a, json=payload)
+        assert created.status_code == 201, created.text
+        agent_id = created.json()["id"]
+        assert created.json()["status"] == "draft"
+        assert client.get("/api/agents", headers=headers_b).json() == []
+        assert client.put(f"/api/agents/{agent_id}", headers=headers_b, json={**payload, "status": "active"}).status_code == 404
+        updated = client.put(f"/api/agents/{agent_id}", headers=headers_a, json={**payload, "name": "Updated helper", "status": "active"})
+        assert updated.status_code == 200, updated.text
+        assert updated.json()["name"] == "Updated helper"
+        assert updated.json()["status"] == "active"
+        assert client.delete(f"/api/agents/{agent_id}", headers=headers_b).status_code == 404
+        assert client.delete(f"/api/agents/{agent_id}", headers=headers_a).status_code == 204
+        assert client.get("/api/agents", headers=headers_a).json() == []
