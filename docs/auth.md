@@ -1,18 +1,31 @@
-# Authentication — phase 3
+# Authentication
 
-FastAPI implements register, login, me and logout endpoints backed by SQLAlchemy/PostgreSQL.
-Passwords are hashed with Argon2. Bearer session tokens are cryptographically random; only SHA-256 digests are stored in the database. Sessions expire after 7 days and logout revokes the session.
+FastAPI provides registration, login, current-session validation and logout endpoints backed by SQLAlchemy and PostgreSQL.
 
-## Important deployment steps
-1. Provision a PostgreSQL database and a backend HTTPS host.
-2. Set DATABASE_URL and CORS_ORIGINS as backend environment variables (do not commit secrets).
-3. Set VITE_API_URL as a GitHub Actions variable when building the frontend; it must point to your backend HTTPS URL.
-4. Keep the backend private credentials outside GitHub Pages.
-5. The initial version uses SQLAlchemy create_all for bootstrapping; use Alembic migrations before evolving production schemas.
+## Implemented
 
-## Security and limitations
-- API is not deployed by GitHub Pages; the login form cannot connect until the backend is hosted.
-- Frontend holds bearer tokens in memory only; refreshing the page signs the user out. This reduces persistence risk but is not a complete production auth architecture.
-- Password reset and email verification are not implemented yet.
-- Rate limiting, bot protection, monitoring, migrations and abuse prevention must be added before a public production launch.
-- Never use SQLite on ephemeral backend hosting for real accounts.
+- `POST /api/auth/register`: creates an account and returns a bearer session token.
+- `POST /api/auth/login`: validates credentials and returns a bearer session token.
+- `GET /api/auth/me`: validates the current bearer token and returns the user.
+- `POST /api/auth/logout`: revokes the current session.
+- Passwords are hashed with Argon2.
+- Session tokens are cryptographically random. Only SHA-256 token digests are stored in the database.
+- Sessions expire after seven days.
+- The frontend persists the current token and user in localStorage and validates the session with `/api/auth/me` on application startup.
+
+## Deployment
+
+1. Set `DATABASE_URL` to the PostgreSQL Session Pooler URI supplied by the database provider.
+2. Set `CORS_ORIGINS` to the exact frontend origin.
+3. Set the GitHub Actions repository variable `VITE_API_URL` to the public HTTPS backend origin, without a trailing slash.
+4. Keep database credentials private and outside the frontend build.
+
+## Security limitations
+
+- Email verification and password reset are not implemented.
+- Rate limiting, bot protection, monitoring and abuse prevention are not implemented.
+- Database schema changes are not managed by migrations yet; startup currently uses SQLAlchemy `create_all`, which does not alter existing tables.
+- The frontend stores bearer tokens in localStorage. This is convenient for the current alpha but increases the impact of any cross-site scripting (XSS) vulnerability. A production authentication design should consider secure HttpOnly cookies and appropriate CSRF protections.
+- Expired sessions are rejected when used, but there is no scheduled cleanup job for old session rows.
+
+Treat this project as an alpha, not a production-ready identity system. Never commit or share database passwords, bearer tokens or other private credentials.
