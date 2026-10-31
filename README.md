@@ -12,12 +12,13 @@ A bilingual Persian/English Agentic AI workspace built with React, Vite and Fast
 - Owner-scoped agent configuration CRUD (draft/active/paused).
 - Single-step agent task execution with durable task history and execution audit events.
 - Database readiness endpoint and scheduled production smoke-check workflow.
+- Account settings overview with safe AI-provider capability status.
 - Optional OpenAI-compatible chat completion integration configured only on the backend.
 - Dashboard route and selected-tab persistence across refreshes.
 - Frontend deployment through GitHub Pages.
 - FastAPI backend deployment through Render.
 
-The Agents dashboard supports agent configuration and bounded single-step model tasks. This is an early runtime MVP, not yet a multi-step autonomous system: tool integrations, background workers, cancellation, cost budgets, approval gates and workflow orchestration remain unimplemented. Settings is still a placeholder. Chat and agent tasks require an OpenAI-compatible provider configured privately on the backend.
+The Agents dashboard supports agent configuration and bounded single-step model tasks. This is an early runtime MVP, not yet a multi-step autonomous system: tool integrations, background workers, cancellation, cost budgets, approval gates and workflow orchestration remain unimplemented. Settings currently shows account and provider status; profile editing, language preferences and session management remain pending. Chat and agent tasks require an OpenAI-compatible provider configured privately on the backend.
 
 ## Frontend
 
