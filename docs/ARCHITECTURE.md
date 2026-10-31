@@ -77,3 +77,8 @@ All project and conversation endpoints require an authenticated session and scop
 - `GET /api/agents/{agent_id}/tasks/{task_id}/events` returns the task audit trail.
 - This is deliberately not a general-purpose tool runner: no shell, code interpreter, network fetch, external integrations or arbitrary tool execution is available.
 - Known runtime gaps: synchronous HTTP execution, no worker queue, no cancellation, no cost/token budgets, no retry policy, no stuck-running recovery and no human approval workflow.
+
+
+## Public capability status
+- `GET /api/capabilities` returns only booleans for `chat` and `agent_tasks`, derived from whether a private `AI_API_KEY` is configured.
+- It never returns the key, base URL, provider response or secret values. The settings screen uses it to display whether AI features are configured.
