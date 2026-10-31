@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session as DBSession
 from .auth import current_session, digest, issue_session, password_hash
 from .database import Base, engine, get_db
 from .models import User, Session as LoginSession
+from .ai_provider import is_configured as ai_is_configured
 from .projects import router as projects_router
 from .conversations import router as conversations_router
 from .agents import router as agents_router
@@ -37,6 +38,11 @@ def public_user(user: User) -> dict:
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "agentic-ai-platform"}
+
+@app.get("/api/capabilities")
+def capabilities():
+    configured = ai_is_configured()
+    return {"chat": configured, "agent_tasks": configured}
 
 @app.get("/api/ready")
 def ready():
