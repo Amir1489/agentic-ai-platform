@@ -16,12 +16,12 @@ def is_configured() -> bool:
     return bool(os.getenv("AI_API_KEY", "").strip())
 
 
-def generate_reply(messages: list[dict[str, str]], system_prompt: str | None = None) -> str:
+def generate_reply(messages: list[dict[str, str]], system_prompt: str | None = None, model: str | None = None) -> str:
     api_key = os.getenv("AI_API_KEY", "").strip()
     if not api_key:
         raise AIProviderNotConfigured("AI provider is not configured")
     base_url = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-    model = os.getenv("AI_MODEL", "gpt-4o-mini").strip()
+    model = (model or os.getenv("AI_MODEL", "gpt-4o-mini")).strip()
     payload = json.dumps({
         "model": model,
         "messages": [
