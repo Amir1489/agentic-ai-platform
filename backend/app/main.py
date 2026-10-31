@@ -11,6 +11,7 @@ from .database import Base, engine, get_db
 from .models import User, Session as LoginSession
 from .projects import router as projects_router
 from .conversations import router as conversations_router
+from .agents import router as agents_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -67,3 +68,4 @@ def logout(auth: tuple[User, LoginSession] = Depends(current_session), db: DBSes
 
 app.include_router(projects_router)
 app.include_router(conversations_router)
+app.include_router(agents_router)
