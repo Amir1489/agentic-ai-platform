@@ -9,11 +9,12 @@ A bilingual Persian/English Agentic AI workspace built with React, Vite and Fast
 - PostgreSQL-backed user accounts and projects.
 - Per-user project isolation.
 - Persistent, account-scoped conversations and message history.
+- Optional OpenAI-compatible chat completion integration configured only on the backend.
 - Dashboard route and selected-tab persistence across refreshes.
 - Frontend deployment through GitHub Pages.
 - FastAPI backend deployment through Render.
 
-The Agents, Conversations and Settings dashboard sections are currently placeholders. AI-agent execution and chat orchestration are not implemented yet.
+The Agents and Settings dashboard sections are still placeholders. Chat requests use an optional OpenAI-compatible provider; the provider must be configured on the backend before AI replies are available.
 
 ## Frontend
 
@@ -46,5 +47,7 @@ See [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md)
 ## Important limitations
 
 This is an alpha project. Email verification, password reset, rate limiting, database migrations, monitoring and production abuse protections are not implemented. Browser authentication tokens are currently stored in localStorage; this is convenient for the current prototype but is less resistant to token theft after an XSS vulnerability than secure HttpOnly cookies.
+
+To enable chat replies, set `AI_API_KEY` as a private environment variable on the Render backend. Optionally set `AI_BASE_URL` and `AI_MODEL`. The default model setting is `gpt-4o-mini` with the OpenAI API base URL. API usage may incur separate charges; ChatGPT Free does not include API credits. Never expose these values in frontend `VITE_*` variables.
 
 Never commit database credentials, API keys or session tokens. Do not put private credentials in variables prefixed with `VITE_`; frontend build variables are public.
