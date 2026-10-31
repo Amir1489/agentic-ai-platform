@@ -15,3 +15,6 @@
 :root[data-theme="dark"] .dash-modal input{background:#17263a;color:#e4edf8;border-color:#4a607d}
 :root[data-theme="dark"] .dash-modal-actions button:not(.dash-create){background:#2a3d56;color:#d0e0f4}
 :root[data-theme="dark"] .dash-overlay{background:#050b16cc}
+
+/* Prevent long account names and project labels from escaping narrow layouts. */
+.dash,.dash-body,.dash-main,.dash-side,.dash-panel,.dash-card{min-width:0;max-width:100%}.dash-top{min-width:0;gap:10px}.dash-top>span:first-child{min-width:0;overflow-wrap:anywhere}.dash-top-actions{flex-shrink:0}.dash-heading>div{min-width:0}.dash-heading h1,.dash-heading p,.dash-project-info strong{overflow-wrap:anywhere}.dash-project,.dash-project-info{min-width:0}.dash-project-info{overflow:hidden}.dash-nav{min-width:max-content}@media(max-width:540px){.dash{padding:8px}.dash-side{padding:9px}.dash-side nav{max-width:100%;padding-bottom:3px}.dash-nav{flex:0 0 auto}.dash-top{padding:10px 6px 14px}.dash-main{padding:8px 2px}.dash-panel{padding:18px 14px}.dash-project{gap:9px;padding:10px}.dash-modal{max-width:100%;min-width:0;padding:22px}.dash-modal input{min-width:0;max-width:100%}.dash-modal-actions{flex-wrap:wrap}.dash-modal-actions button{flex:1}}
