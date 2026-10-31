@@ -9,12 +9,15 @@ A bilingual Persian/English Agentic AI workspace built with React, Vite and Fast
 - PostgreSQL-backed user accounts and projects.
 - Per-user project isolation.
 - Persistent, account-scoped conversations and message history.
+- Owner-scoped agent configuration CRUD (draft/active/paused).
+- Single-step agent task execution with durable task history and execution audit events.
+- Database readiness endpoint and scheduled production smoke-check workflow.
 - Optional OpenAI-compatible chat completion integration configured only on the backend.
 - Dashboard route and selected-tab persistence across refreshes.
 - Frontend deployment through GitHub Pages.
 - FastAPI backend deployment through Render.
 
-The Agents and Settings dashboard sections are still placeholders. Chat requests use an optional OpenAI-compatible provider; the provider must be configured on the backend before AI replies are available.
+The Agents dashboard supports agent configuration and bounded single-step model tasks. This is an early runtime MVP, not yet a multi-step autonomous system: tool integrations, background workers, cancellation, cost budgets, approval gates and workflow orchestration remain unimplemented. Settings is still a placeholder. Chat and agent tasks require an OpenAI-compatible provider configured privately on the backend.
 
 ## Frontend
 
@@ -42,7 +45,7 @@ Set `DATABASE_URL` to PostgreSQL for persistent data. SQLite is intended only fo
 - Backend: Render (see `render.yaml`).
 - Database: Supabase PostgreSQL.
 
-See [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md), [projects API](docs/projects.md), [architecture decisions](docs/ARCHITECTURE.md), [product roadmap](docs/ROADMAP.md), and the [engineering progress and release log](docs/PROGRESS.md).
+See [agent API and runtime](docs/agents.md), [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md), [projects API](docs/projects.md), [architecture decisions](docs/ARCHITECTURE.md), [product roadmap](docs/ROADMAP.md), and the [engineering progress and release log](docs/PROGRESS.md).
 
 ## Important limitations
 
