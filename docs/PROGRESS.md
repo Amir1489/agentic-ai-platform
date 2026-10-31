@@ -24,6 +24,9 @@ Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-plat
 
 ## Current verified CI / deployment
 
+- Latest production smoke including public AI capability status: **PASS** — [run 41237125586](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41237125586). Frontend, backend health and database readiness all passed; `/api/capabilities` returned `chat: false`, `agent_tasks: false`.
+
+
 - Live production smoke: **PASS** — deployed GitHub Pages frontend returned the expected app shell, Render `/api/health` passed, and Render `/api/ready` confirmed database connectivity — [run 41237092058](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41237092058).
 
 
@@ -53,6 +56,13 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Production AI capability check
+- Added a secret-safe smoke check for `/api/capabilities`.
+- Production frontend, backend health and database readiness all passed.
+- Production reports `chat: false` and `agent_tasks: false`: no private `AI_API_KEY` is configured on the Render backend at the time of this check. No model calls can succeed until the owner configures a provider key privately in Render; no key was requested or exposed.
+
+
 
 ### 2026-10-31 — Live production smoke verification
 - Triggered the production smoke workflow on the latest monitoring configuration.
