@@ -12,7 +12,8 @@ Acceptance criteria:
 - React/Vite frontend builds in CI.
 - FastAPI backend tests pass in CI.
 - GitHub Pages deployment completes.
-- Render health endpoint responds successfully in production.
+- [x] Render health endpoint responds successfully in production (scheduled smoke workflow configured; live check pending).
+- [x] Database readiness endpoint is implemented and covered by backend tests; live Supabase connectivity remains to be confirmed.
 - Supabase connection is verified without exposing credentials.
 - CORS allows only explicitly configured frontend origins.
 
