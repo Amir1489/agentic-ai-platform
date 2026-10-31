@@ -43,12 +43,15 @@ Acceptance criteria:
 - UI has empty/loading/error states and clear validation.
 
 ## Phase 3 — Agent runtime and task execution
-**Status: not implemented**
+**Status: early single-step MVP implemented; safeguards and orchestration remain**
 
 Acceptance criteria:
-- Backend task state machine: queued, running, awaiting approval, succeeded, failed, cancelled.
+- [x] Durable task records with running, succeeded and failed states for bounded single-step model execution.
+- [x] Append-only started/succeeded/failed execution events.
+- [ ] Full queued/awaiting-approval/cancelled state machine and background worker.
 - Durable task records and append-only execution events.
-- Bounded execution time, token/cost budgets, retries with backoff and cancellation.
+- [x] Provider request timeout and strict input/output character limits.
+- [ ] Per-user token/cost budgets, retries with backoff, cancellation and stuck-task recovery.
 - Idempotency protections for retried operations.
 - No arbitrary shell/code execution in the initial release.
 - Tool allowlists, input validation and least-privilege credentials.
