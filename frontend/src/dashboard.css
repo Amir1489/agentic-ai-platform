@@ -25,3 +25,22 @@
 .agent-task p{margin:6px 0 0;font-size:.86rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-height:150px;overflow:auto}
 :root[data-theme="dark"] .agent-task{background:#17263a;border-color:#3a4e67}
 .agent-task textarea{width:100%;max-width:100%;margin-top:8px;resize:vertical;box-sizing:border-box}
+
+/* User-selectable palette: shared tokens keep the look consistent across the app. */
+:root{--user-accent:#4988e7;--user-background:#eef5ff;--user-surface:#ffffff;--user-text:#263f60}
+:root[data-theme="light"] body{background:var(--user-background);color:var(--user-text)}
+:root[data-theme="light"] .app{background-color:var(--user-background)}
+:root[data-theme="light"] .hero h1,:root[data-theme="light"] .welcome-card h1,:root[data-theme="light"] .dash{color:var(--user-text)}
+:root[data-theme="light"] .glass,:root[data-theme="light"] .dash-panel,:root[data-theme="light"] .dash-card{background:color-mix(in srgb,var(--user-surface) 78%,transparent);}
+:root[data-theme="light"] .primary,:root[data-theme="light"] .sign,:root[data-theme="light"] .auth-submit,:root[data-theme="light"] .dash-create{background:linear-gradient(135deg,color-mix(in srgb,var(--user-accent) 78%,white),var(--user-accent))}
+:root[data-theme="light"] .brand-light,:root[data-theme="light"] .brand-icon,:root[data-theme="light"] .features svg,:root[data-theme="light"] .dialog svg{color:var(--user-accent)}
+:root[data-theme="light"] .brand-icon,:root[data-theme="light"] .auth-symbol,:root[data-theme="light"] .welcome-mark{background:color-mix(in srgb,var(--user-accent) 14%,var(--user-surface))}
+:root[data-theme="light"] .chat-bubble.user,:root[data-theme="light"] .chat-item.active,:root[data-theme="light"] .dash-project-icon{background:color-mix(in srgb,var(--user-accent) 13%,var(--user-surface))}
+:root[data-theme="light"] .dash-nav.active{color:var(--user-accent)}
+.palette-settings{margin-top:26px;padding:20px;border:1px solid #ffffff70;border-radius:20px;background:var(--user-surface);color:var(--user-text);box-shadow:0 8px 24px #7894b322}
+.palette-heading{display:flex;align-items:center;gap:12px}.palette-heading h2{margin:0 0 5px}.palette-heading p{margin:0;color:#8194ad;font-size:13px;line-height:1.8}.palette-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.palette-color{display:flex;align-items:center;gap:10px;min-width:0;padding:11px;border:1px solid #dce7f4;border-radius:13px}.palette-color span{flex:1;font-size:13px}.palette-color input{width:38px;height:34px;padding:2px;border:0;background:transparent;cursor:pointer}.palette-color code{font-size:11px;color:#8294ab}.palette-presets{margin-top:20px}.palette-presets>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.palette-preset{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #dce7f4;border-radius:12px;background:transparent;color:inherit}.palette-preset i{width:13px;height:13px;border-radius:50%}.palette-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:20px}.palette-reset{display:inline-flex;align-items:center;gap:7px;padding:12px;border-radius:12px;background:#edf3fa;color:#607a99}.palette-actions small{color:#27866d}
+:root[data-theme="dark"] .palette-settings{background:#1b2b40;border-color:#3a4e67;color:#e1ebf8}
+:root[data-theme="dark"] .palette-heading p,:root[data-theme="dark"] .palette-color code{color:#a3b6ce}
+:root[data-theme="dark"] .palette-color,:root[data-theme="dark"] .palette-preset{border-color:#40536b}
+:root[data-theme="dark"] .palette-reset{background:#2a3d56;color:#d0e0f4}
+@media(max-width:540px){.palette-grid{grid-template-columns:1fr}.palette-color{flex-wrap:wrap}}
