@@ -44,3 +44,18 @@ jobs:
               assert payload.get("service") == "agentic-ai-platform", f"Unexpected service: {payload}"
           print("Backend health smoke check: PASS")
           PY
+
+      - name: Check backend database readiness
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.request
+          url = "https://agentic-ai-platform-api.onrender.com/api/ready"
+          request = urllib.request.Request(url, headers={"User-Agent": "agentic-platform-smoke-check/1.0"})
+          with urllib.request.urlopen(request, timeout=45) as response:
+              payload = json.loads(response.read().decode("utf-8"))
+              assert response.status == 200, f"Backend readiness returned HTTP {response.status}"
+              assert payload.get("status") == "ready", f"Unexpected readiness payload: {payload}"
+              assert payload.get("database") == "reachable", f"Database is not reachable: {payload}"
+          print("Backend database readiness smoke check: PASS")
+          PY
