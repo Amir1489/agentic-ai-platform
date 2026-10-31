@@ -13,14 +13,14 @@ Never paste database credentials into source files, GitHub commits, frontend var
 
 ## Backend (Render)
 
-The root-level `render.yaml` defines the FastAPI web service.
+The root-level `render.yaml` defines the FastAPI web service. Startup runs `alembic upgrade head` before Uvicorn.
 
 Required environment variables:
 
 - `DATABASE_URL`: private PostgreSQL Session Pooler URI.
 - `CORS_ORIGINS`: exact frontend origin, currently `https://amir1489.github.io`.
 
-The health endpoint is `/api/health` and should return a JSON status response.
+The process health endpoint is `/api/health`. The dependency readiness endpoint `/api/ready` performs a database `SELECT 1`. `/api/capabilities` reports only whether AI-backed features are configured.
 
 ## Frontend (GitHub Pages)
 
@@ -43,6 +43,7 @@ The health endpoint is `/api/health` and should return a JSON status response.
 ## Known operational limitations
 
 - Render free services may spin down while idle, causing a delay on the first request.
-- SQLAlchemy `create_all` bootstraps tables but does not migrate existing schemas. Add Alembic before evolving production schemas.
+- Alembic is configured and Render runs migrations before startup. The initial baseline is idempotent and adopts existing `create_all` installations without dropping data. Future schema changes must be committed as explicit forward migrations and tested against a database backup before release. SQLAlchemy `create_all` remains as a compatibility fallback during this transition.
 - Email verification, password reset, rate limiting, monitoring and production abuse protections are not implemented.
+- Scheduled production smoke checks run every six hours; a successful live database check has not yet been confirmed.
 - Browser bearer tokens are stored in localStorage in this alpha release.
