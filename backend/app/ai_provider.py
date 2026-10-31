@@ -12,6 +12,10 @@ class AIProviderError(Exception):
     pass
 
 
+def is_configured() -> bool:
+    return bool(os.getenv("AI_API_KEY", "").strip())
+
+
 def generate_reply(messages: list[dict[str, str]]) -> str:
     api_key = os.getenv("AI_API_KEY", "").strip()
     if not api_key:
