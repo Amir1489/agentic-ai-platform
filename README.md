@@ -1,26 +1,26 @@
-# Agentic AI Platform
+# سکوی هوش مصنوعی عامل‌محور
 
-A bilingual Persian/English Agentic AI workspace built with React, Vite and FastAPI.
+یک محیط کاری دوزبانه فارسی/انگلیسی برای ساخت و مدیریت عامل‌های هوش مصنوعی؛ ساخته‌شده با React، Vite و FastAPI.
 
-## Current status
+## وضعیت فعلی پروژه
 
-- Responsive Liquid Glass landing page.
-- User registration, login, session validation and logout.
-- PostgreSQL-backed user accounts and projects.
-- Per-user project isolation.
-- Persistent, account-scoped conversations and message history.
-- Owner-scoped agent configuration CRUD (draft/active/paused).
-- Single-step agent task execution with durable task history and execution audit events.
-- Database readiness endpoint and scheduled production smoke-check workflow.
-- Account settings overview with safe AI-provider capability status.
-- Optional OpenAI-compatible chat completion integration configured only on the backend.
-- Dashboard route and selected-tab persistence across refreshes.
-- Frontend deployment through GitHub Pages.
-- FastAPI backend deployment through Render.
+- صفحه آغازین واکنش‌گرا با سبک Liquid Glass.
+- ثبت‌نام، ورود، اعتبارسنجی نشست و خروج از حساب.
+- حساب‌های کاربری و پروژه‌های پایدار روی PostgreSQL.
+- جداسازی پروژه‌ها بر اساس مالکیت کاربر.
+- گفت‌وگوهای پایدار و تاریخچه پیام‌های اختصاصی هر حساب.
+- عملیات CRUD برای پیکربندی عامل‌ها با وضعیت‌های draft، active و paused.
+- اجرای تک‌مرحله‌ای کار عامل همراه با تاریخچه پایدار و رویدادهای ممیزی.
+- مسیر بررسی آمادگی پایگاه داده و گردش‌کار زمان‌بندی‌شده بررسی محیط عملیاتی.
+- نمای تنظیمات حساب و گزارش امن وضعیت قابلیت‌های ارائه‌دهنده هوش مصنوعی.
+- اتصال اختیاری به API سازگار با OpenAI که فقط در بک‌اند پیکربندی می‌شود.
+- حفظ مسیر داشبورد و زبانه انتخاب‌شده پس از تازه‌سازی صفحه.
+- انتشار رابط کاربری از طریق GitHub Pages.
+- انتشار بک‌اند FastAPI از طریق Render.
 
-The Agents dashboard supports agent configuration and bounded single-step model tasks. This is an early runtime MVP, not yet a multi-step autonomous system: tool integrations, background workers, cancellation, cost budgets, approval gates and workflow orchestration remain unimplemented. Settings currently shows account and provider status; profile editing, language preferences and session management remain pending. Chat and agent tasks require an OpenAI-compatible provider configured privately on the backend.
+داشبورد عامل‌ها امکان مدیریت پیکربندی و اجرای محدود تک‌مرحله‌ای مدل را فراهم می‌کند. این نسخه یک نمونه اولیه از محیط اجراست و هنوز سامانه خودمختار چندمرحله‌ای محسوب نمی‌شود. اتصال ابزارها، workerهای پس‌زمینه، لغو اجرا، بودجه هزینه، دروازه‌های تأیید انسانی و هماهنگ‌سازی گردش‌کار هنوز پیاده‌سازی نشده‌اند. صفحه تنظیمات فعلاً نمای حساب و وضعیت ارائه‌دهنده را نشان می‌دهد؛ ویرایش پروفایل، ترجیحات زبان و مدیریت نشست‌ها در برنامه توسعه قرار دارند. قابلیت چت و اجرای کار عامل به پیکربندی خصوصی ارائه‌دهنده هوش مصنوعی در بک‌اند نیاز دارد.
 
-## Frontend
+## اجرای رابط کاربری
 
 ```bash
 cd frontend
@@ -28,9 +28,9 @@ npm install
 npm run dev
 ```
 
-For local development, copy `.env.example` to `.env.local` and set `VITE_API_URL` to your backend URL.
+برای توسعه محلی، فایل `.env.example` را به `.env.local` کپی کنید و مقدار `VITE_API_URL` را برابر نشانی بک‌اند قرار دهید.
 
-## Backend
+## اجرای بک‌اند
 
 ```bash
 cd backend
@@ -39,20 +39,30 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Set `DATABASE_URL` to PostgreSQL for persistent data. SQLite is intended only for local development and tests.
+برای ذخیره‌سازی پایدار، مقدار `DATABASE_URL` را به PostgreSQL تنظیم کنید. SQLite فقط برای توسعه محلی و آزمون‌ها در نظر گرفته شده است.
 
-## Deployment
+## معماری استقرار
 
-- Frontend: GitHub Pages.
-- Backend: Render (see `render.yaml`).
-- Database: Supabase PostgreSQL.
+- رابط کاربری: GitHub Pages
+- بک‌اند: Render (طبق فایل `render.yaml`)
+- پایگاه داده: Supabase PostgreSQL
 
-See [agent API and runtime](docs/agents.md), [deployment guide](docs/deployment.md), [authentication notes](docs/auth.md), [projects API](docs/projects.md), [architecture decisions](docs/ARCHITECTURE.md), [product roadmap](docs/ROADMAP.md), and the [engineering progress and release log](docs/PROGRESS.md).
+## مستندات
 
-## Important limitations
+مستندات فارسی پروژه در پوشه [docs/fa](docs/fa/README.md) فهرست شده‌اند. مستندات فنی انگلیسی فعلی نیز در مسیرهای زیر قرار دارند:
 
-This is an alpha project. Email verification, password reset, rate limiting, database migrations, monitoring and production abuse protections are not implemented. Browser authentication tokens are currently stored in localStorage; this is convenient for the current prototype but is less resistant to token theft after an XSS vulnerability than secure HttpOnly cookies.
+- [مستند API و اجرای عامل‌ها](docs/agents.md)
+- [راهنمای استقرار](docs/deployment.md)
+- [یادداشت‌های احراز هویت](docs/auth.md)
+- [مستند API پروژه‌ها](docs/projects.md)
+- [تصمیم‌های معماری](docs/ARCHITECTURE.md)
+- [نقشه راه محصول](docs/ROADMAP.md)
+- [گزارش پیشرفت و تاریخچه انتشار](docs/PROGRESS.md)
 
-To enable chat replies, set `AI_API_KEY` as a private environment variable on the Render backend. Optionally set `AI_BASE_URL` and `AI_MODEL`. The default model setting is `gpt-4o-mini` with the OpenAI API base URL. API usage may incur separate charges; ChatGPT Free does not include API credits. Never expose these values in frontend `VITE_*` variables.
+## محدودیت‌های مهم
 
-Never commit database credentials, API keys or session tokens. Do not put private credentials in variables prefixed with `VITE_`; frontend build variables are public.
+این پروژه در مرحله آلفا قرار دارد. تأیید ایمیل، بازیابی گذرواژه، محدودسازی نرخ، پایش و محافظت عملیاتی در برابر سوءاستفاده هنوز کامل نشده‌اند. توکن احراز هویت مرورگر در حال حاضر در `localStorage` ذخیره می‌شود؛ این روش برای نمونه اولیه ساده است، اما در صورت وجود آسیب‌پذیری XSS نسبت به کوکی امن HttpOnly مقاومت کمتری در برابر سرقت توکن دارد.
+
+برای فعال‌کردن پاسخ چت، مقدار `AI_API_KEY` را به‌عنوان متغیر محرمانه در بک‌اند Render تنظیم کنید. در صورت نیاز، `AI_BASE_URL` و `AI_MODEL` را نیز تنظیم کنید. مدل پیش‌فرض `gpt-4o-mini` و نشانی پیش‌فرض API، نشانی OpenAI است. استفاده از API ممکن است هزینه جداگانه داشته باشد؛ اشتراک رایگان ChatGPT اعتبار API فراهم نمی‌کند. این مقادیر را هرگز در متغیرهای فرانت‌اند با پیشوند `VITE_*` قرار ندهید.
+
+هرگز اطلاعات اتصال پایگاه داده، کلید API یا توکن نشست را در مخزن ثبت نکنید. متغیرهای دارای پیشوند `VITE_` در بسته فرانت‌اند قابل مشاهده‌اند و محل نگهداری اطلاعات محرمانه نیستند.
