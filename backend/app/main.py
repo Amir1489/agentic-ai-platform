@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select
+from sqlalchemy import select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DBSession
 from .auth import current_session, digest, issue_session, password_hash
@@ -36,6 +37,16 @@ def public_user(user: User) -> dict:
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "agentic-ai-platform"}
+
+@app.get("/api/ready")
+def ready():
+    """Readiness check: confirms the configured database accepts a simple query."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail="Database is not ready")
+    return {"status": "ready", "database": "reachable"}
 
 @app.post("/api/auth/register", status_code=201)
 def register(data: Credentials, db: DBSession = Depends(get_db)):
