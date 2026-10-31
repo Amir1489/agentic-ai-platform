@@ -6,7 +6,7 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 
 ## Overall progress
 
-**Estimated implementation progress: 51%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
+**Estimated implementation progress: 53%** toward the production-oriented product scope defined in [ROADMAP.md](./ROADMAP.md). This is an engineering estimate, not a measured uptime or test-coverage percentage. The landing page, authentication foundation, projects, and persistent chat are implemented; the agent runtime, tool execution, workflow orchestration, and production hardening remain substantial work.
 
 | Workstream | Progress | Evidence / remaining work |
 |---|---:|---|
@@ -17,12 +17,15 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 | Agent creation/runtime | 60% | Owner-scoped agent CRUD, dashboard controls, single-step model execution, durable task records and audit events exist; queues, cancellation, budgets and tool orchestration remain |
 | Tools and integrations | 0% | Not implemented |
 | Workflow orchestration | 0% | Multi-step workflows, branching and replay are not implemented; current agent runs are single-step model calls |
-| Database reliability/migrations | 20% | SQLAlchemy models and create_all; Alembic migrations and backup/restore plan remain |
+| Database reliability/migrations | 40% | Alembic baseline and repeatable migration CI added; backup/restore drills, explicit future revisions and production migration verification remain |
 | Security and operations | 30% | Password hashing, hashed session tokens, owner checks, safe capability status and DB readiness; rate limits, secure cookies, monitoring, CSP and abuse controls remain |
-| Automated quality gates | 65% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
+| Automated quality gates | 70% | Backend pytest, frontend production build and scheduled frontend/backend/database readiness smoke checks are configured; browser E2E, accessibility, dependency and security scans remain |
 | Documentation | 65% | README, architecture, roadmap, agent API guide and progress/release log; operational runbooks and release checklist remain |
 
 ## Current verified CI / deployment
+
+- Alembic baseline repeated twice against a clean SQLite database and backend API suite: **PASS** — [run 41236687579](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236687579).
+
 
 - Latest backend API suite (including capability status, per-agent model selection, task success/failure audit, and whitespace validation): **PASS** — [run 41236572082](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236572082).
 - Settings overview frontend build and Pages deployment: **PASS** — [run 41236476001](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236476001).
@@ -44,6 +47,14 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Database migration baseline
+- Added Alembic configuration, environment, initial idempotent schema baseline and revision template.
+- Render startup now runs `alembic upgrade head` before Uvicorn.
+- Backend CI runs the baseline twice against a clean SQLite database, then runs the API suite; all steps passed in run 41236687579.
+- Existing installations are adopted without dropping tables. The baseline is intentionally forward-only; future schema changes require explicit revisions and backups.
+
+
 
 ### 2026-10-31 — Settings overview and runtime validation hardening
 - Added a safe `/api/capabilities` endpoint exposing only whether chat and agent tasks are configured; no secrets or provider URLs are returned.
