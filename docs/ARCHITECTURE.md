@@ -62,3 +62,8 @@ All project and conversation endpoints require an authenticated session and scop
 - `DELETE /api/agents/{id}`: delete an owned agent.
 - Every endpoint requires a valid bearer session and scopes reads/writes by `owner_id`.
 - Important boundary: `active` is currently metadata only. It does not launch a worker or execute model/tool actions; runtime is a later roadmap phase.
+
+
+## Health and readiness
+- `GET /api/health` is a process-level health response and does not verify dependencies.
+- `GET /api/ready` performs a lightweight `SELECT 1` using the configured SQLAlchemy engine and returns HTTP 503 on database errors. It does not expose connection strings or credentials.
