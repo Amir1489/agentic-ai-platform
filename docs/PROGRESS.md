@@ -24,6 +24,11 @@ Latest documentation commit: pending\nLatest CI configuration commit: `85687db07
 
 ## Current verified CI / deployment
 
+- Agent runtime backend tests, including success/failure persistence and audit events: **PASS** — [run 41236359157](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236359157).
+- Agent dashboard TypeScript production build and GitHub Pages deployment: **PASS** — [run 41236314384](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236314384).
+- Earlier readiness endpoint tests: **PASS** — [run 41236189102](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236189102).
+
+
 - Agent CRUD backend tests: **PASS** — [run 41236112302](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236112302), including ownership isolation and lifecycle state updates.
 - Earlier CI configuration checks: backend tests and frontend Pages deploy **PASS** — [backend run 41235967420](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235967420), [frontend run 41235963845](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41235963845).
 - Agent dashboard UI build is currently queued/in progress; do not count it as passed until completed.
@@ -35,6 +40,13 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-10-31 — Agent task runtime CI verification
+- Backend test suite passed for task success, task failure persistence, ownership and audit-event ordering.
+- Frontend TypeScript/Vite production build and Pages deployment passed with agent task controls.
+- Live provider execution remains unverified because backend provider credentials are not available to CI.
+
+
 
 ### 2026-10-31 — First bounded agent execution path
 - Added durable agent task records and append-only started/succeeded/failed event records.
