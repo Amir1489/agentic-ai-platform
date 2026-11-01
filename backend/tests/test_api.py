@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from pathlib import Path
 
 db_path = Path(tempfile.mkdtemp()) / "test.db"
@@ -7,6 +8,18 @@ os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 
 from fastapi.testclient import TestClient
 from app.main import app
+
+
+def wait_for_task(client, url, headers, expected_status, timeout=5):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        response = client.get(url, headers=headers)
+        assert response.status_code == 200, response.text
+        task = response.json()
+        if task["status"] == expected_status:
+            return task
+        time.sleep(0.05)
+    raise AssertionError(f"Task did not reach {expected_status} before timeout")
 
 def test_health_and_account_isolation():
     with TestClient(app) as client:
@@ -172,7 +185,7 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
         assert history.json()[0]["id"] == task["id"]
         events = client.get(f"/api/agents/{agent_id}/tasks/{task['id']}/events", headers=headers)
         assert events.status_code == 200
-        assert [event["type"] for event in events.json()] == ["started", "succeeded"]
+        assert [event["type"] for event in events.json()] == ["queued", "started", "succeeded"]
 
 
 def test_agent_provider_failure_is_recorded(monkeypatch):
@@ -199,8 +212,17 @@ def test_agent_provider_failure_is_recorded(monkeypatch):
             raise AIProviderError("provider unavailable")
         monkeypatch.setattr(agents, "generate_reply", fail_provider)
         failed = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Run this"})
-        assert failed.status_code == 502
-        history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers).json()
+        assert failed.status_code == 202, failed.text
+        queued = failed.json()
+        assert queued["status"] == "queued"
+        task = wait_for_task(
+            client,
+            f"/api/agents/{created.json()['id']}/tasks/{queued['id']}",
+            headers,
+            "failed",
+        )
+        assert task["status"] == "failed"
+        history = client.get(f"/api/agents/{created.json()['id']}/tasks", headers=headers).json()
         assert history[0]["status"] == "failed"
         events = client.get(f"/api/agents/{agent_id}/tasks/{history[0]['id']}/events", headers=headers).json()
         assert [event["type"] for event in events] == ["started", "failed"]
