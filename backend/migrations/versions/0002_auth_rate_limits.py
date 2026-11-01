@@ -24,7 +24,15 @@ def upgrade():
             Column("window_start", Integer(), nullable=False),
             Column("request_count", Integer(), nullable=False),
         )
+    indexes = {item["name"] for item in inspect(bind).get_indexes("auth_rate_limit_buckets")}
+    if "ix_auth_rate_limit_buckets_window_start" not in indexes:
+        op.create_index("ix_auth_rate_limit_buckets_window_start", "auth_rate_limit_buckets", ["window_start"])
 
 
 def downgrade():
-    op.drop_table("auth_rate_limit_buckets")
+    bind = op.get_bind()
+    if "auth_rate_limit_buckets" in inspect(bind).get_table_names():
+        indexes = {item["name"] for item in inspect(bind).get_indexes("auth_rate_limit_buckets")}
+        if "ix_auth_rate_limit_buckets_window_start" in indexes:
+            op.drop_index("ix_auth_rate_limit_buckets_window_start", table_name="auth_rate_limit_buckets")
+        op.drop_table("auth_rate_limit_buckets")
