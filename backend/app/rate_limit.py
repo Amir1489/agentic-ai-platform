@@ -2,7 +2,7 @@ import hashlib
 import time
 
 from fastapi import HTTPException, Request
-from sqlalchemy import case
+from sqlalchemy import case, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session as DBSession
@@ -45,7 +45,9 @@ def enforce_auth_rate_limit(
         # Do not silently fall back to a per-process limiter in production.
         raise HTTPException(status_code=503, detail="Authentication protection is unavailable")
 
-    statement = insert(table).values(
+    try:
+        db.execute(delete(table).where(table.c.window_start < now - max(REGISTER_WINDOW_SECONDS, LOGIN_WINDOW_SECONDS)))
+        statement = insert(table).values(
         bucket_key=bucket_key,
         window_start=window_start,
         request_count=1,
@@ -62,7 +64,6 @@ def enforce_auth_rate_limit(
         },
     ).returning(table.c.window_start, table.c.request_count)
 
-    try:
         stored_window, request_count = db.execute(statement).one()
         db.commit()
     except Exception:
