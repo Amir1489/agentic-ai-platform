@@ -1,113 +1,110 @@
 # Product Roadmap and Acceptance Criteria
 
 ## Product direction
-Build a reliable bilingual (Persian/English) Agentic AI workspace where users can create agents, connect approved tools, run supervised tasks, inspect execution history, and manage projects and conversations.
 
-The platform must not be described as a fully autonomous agent system until the runtime, permissions, tool execution, audit history, and failure handling exist and are tested.
+Build a general-audience SaaS workspace for creating and operating AI agents through a visual, no-code builder. The approved product decisions are:
+- Audience: general users, with early validation focused on accessible user groups.
+- Revenue: Freemium SaaS with server-enforced usage limits; paid tiers only after unit economics are measured.
+- Agent creation: Visual Builder as the primary experience.
+- Models: multi-provider architecture behind a backend adapter layer.
+- Launch: closed, invitation-only beta before any public launch.
 
-## Phase 0 — Foundation and deployment
-**Status: implemented with remaining operational verification**
+See [Product Strategy (Persian)](./fa/PRODUCT_STRATEGY.md) and [Execution Plan (Persian)](./fa/EXECUTION_PLAN.md) for the approved details.
 
-Acceptance criteria:
-- React/Vite frontend builds in CI.
-- FastAPI backend tests pass in CI.
-- GitHub Pages deployment completes.
-- [x] Render health endpoint responds successfully in production (scheduled smoke workflow configured; live check pending).
-- [x] Database readiness endpoint is implemented and covered by backend tests; live Supabase connectivity remains to be confirmed.
-- [ ] Supabase production connection is verified without exposing credentials.
-- [x] Alembic baseline migration runs before Render startup and is repeatable in CI.
-- CORS allows only explicitly configured frontend origins.
+Do not describe the product as fully autonomous until runtime safeguards, permissions, tool execution, audit history and failure handling are implemented and tested.
 
-## Phase 1 — Accounts, projects, conversations
-**Status: core implemented; hardening remains**
+## Phase 0 — Foundation and security hardening
+**Status: partial; verify against current CI and production evidence**
 
 Acceptance criteria:
-- Registration rejects invalid input and duplicate accounts.
-- Passwords are hashed; raw passwords are never stored.
-- Login, current-user lookup, logout and expired-session behavior are tested.
-- Users cannot list, read, modify or delete another user's resources.
-- Project CRUD persists across sessions.
-- Conversation history persists; provider failures do not leave orphan user messages.
-- UI handles loading, empty, error, retry and concurrent-action states.
-- Add email verification, password reset, session revocation, rate limiting and secure cookie strategy before production.
+- Backend API tests and frontend typecheck/build pass on the latest commit.
+- Owner-scoped access is tested for all user-owned resources.
+- Rate limits, input bounds, session security and CORS are reviewed.
+- Database migrations, backup and restore procedures are documented and tested.
+- Production health, database readiness and provider capability are reported separately.
+- Browser E2E coverage exists for signup, login, agent creation and first task.
 
-## Phase 2 — Agent management
-**Status: partially implemented**
+## Phase 1 — Visual Agent Builder
+**Status: not complete**
 
 Acceptance criteria:
-- [x] Create, list, edit, pause, resume and delete agent configuration records.
-- [ ] Add full form validation, pagination and robust browser E2E coverage.
-- Agent configuration is validated server-side and scoped to its owner.
-- Agent identity, model selection, system instructions, enabled tools and limits are persisted.
-- Draft and active states are distinct.
-- Dangerous or external actions require explicit per-action approval.
-- UI has empty/loading/error states and clear validation.
+- Users can create and edit agents through forms; no JSON editing or code is required.
+- Agent name, description, goal, instructions and model are validated server-side.
+- Provider/model choices come from backend configuration, not hard-coded frontend assumptions.
+- Draft, active and paused states are clear and enforced.
+- Templates and beginner guidance are available.
+- Loading, empty, validation, provider-unavailable and error states are accessible.
+- API ownership tests and browser flow tests pass.
 
-## Phase 3 — Agent runtime and task execution
-**Status: early single-step MVP implemented; safeguards and orchestration remain**
+## Phase 2 — Multi-provider model layer
+**Status: partial / requires provider abstraction and additional adapters**
 
 Acceptance criteria:
-- [x] Durable task records with running, succeeded and failed states for bounded single-step model execution.
-- [x] Append-only started/succeeded/failed execution events.
-- [ ] Full queued/awaiting-approval/cancelled state machine and background worker.
-- Durable task records and append-only execution events.
-- [x] Provider request timeout and strict input/output character limits.
-- [ ] Per-user token/cost budgets, retries with backoff, cancellation and stuck-task recovery.
-- Idempotency protections for retried operations.
-- No arbitrary shell/code execution in the initial release.
-- Tool allowlists, input validation and least-privilege credentials.
-- Clear trace of model decisions, tool calls, outputs and failures.
-- Human approval gates for sending messages, publishing, deleting, spending or other consequential actions.
+- A backend Provider Adapter contract isolates model-specific APIs.
+- At least two supported providers are integrated before claiming multi-provider availability.
+- Provider/model catalogue exposes only configured and permitted choices.
+- Secrets remain backend-only and are never returned to clients or logs.
+- Timeouts, normalized errors, usage metadata and provider health are handled.
+- Contract tests use mocks and do not require live paid accounts in CI.
 
-## Phase 4 — Tool registry and integrations
+## Phase 3 — Reliable agent runtime and usage controls
+**Status: early single-step execution exists; production safeguards remain**
+
+Acceptance criteria:
+- Durable task state machine includes queued, running, succeeded, failed and cancelled states.
+- Worker recovery, bounded retries, idempotency and cancellation are tested.
+- Per-user concurrency, time, input/output and cost budgets are enforced.
+- Execution events are auditable and owner-scoped.
+- Provider failures do not create misleading successful task records.
+
+## Phase 4 — Workflow engine and approved tools
 **Status: not implemented**
 
 Acceptance criteria:
-- Versioned tool schemas with typed inputs/outputs.
-- Per-user authorization and encrypted credential storage.
-- Tool permission scopes and revocation.
-- Timeouts, quotas, structured errors and audit events.
-- Mock tools for CI; integration tests never depend on real external accounts.
-- SSRF and prompt-injection defenses for tools that fetch external content.
+- Versioned workflows use typed steps and explicit dependencies.
+- Timeouts, step limits, budget limits and pause/cancel behavior prevent runaway execution.
+- Tool schemas are versioned and inputs/outputs validated.
+- Credentials are encrypted and scoped per user.
+- Tool allowlists, least privilege, audit events and revocation exist.
+- Consequential external actions require explicit human approval.
+- SSRF and prompt-injection defenses are tested.
 
-## Phase 5 — Workflow orchestration
+## Phase 5 — SaaS usage, quotas and billing
 **Status: not implemented**
 
 Acceptance criteria:
-- Users can compose tasks from validated steps.
-- Explicit branching, retries, timeouts and approval nodes.
-- Persisted workflow versions and run history.
-- Execution limits prevent infinite loops and runaway costs.
-- Resume/replay behavior is deterministic where possible.
+- Usage is metered per user, task, provider and model.
+- Free/Pro/Premium entitlements and quotas are enforced in the backend.
+- Concurrent requests cannot bypass quotas.
+- Cost per successful task and plan margin can be estimated.
+- Payment webhooks are verified and idempotent.
+- Subscription lifecycle, cancellation and failed-payment behavior are tested.
+- No unlimited plan is offered without a measured and safe cost model.
 
-## Phase 6 — Settings, observability and operations
-**Status: partial / not implemented**
-
-Acceptance criteria:
-- Profile, language, appearance, session and provider settings.
-- No secret is returned to the browser after saving.
-- Structured logs exclude credentials and sensitive content by default.
-- Health/readiness checks distinguish API health from database/provider readiness.
-- Error monitoring, metrics, alerts, backup and restore drills.
-- Data export and account deletion policy.
-
-## Phase 7 — Release readiness
+## Phase 6 — Closed beta
 **Status: pending**
 
-Required checks:
-- Backend unit/API/integration suite.
-- Frontend typecheck and production build.
-- Browser E2E tests for signup, login, logout, project CRUD, chat history and responsive navigation.
-- Accessibility audit (keyboard, labels, contrast, reduced motion).
-- Security review (authorization, input validation, CORS, rate limits, secrets, dependency audit).
-- Performance audit (bundle size, API latency, DB query patterns, pagination).
-- Production smoke tests against live frontend/backend/database.
-- Document known limitations, rollback procedure and release notes.
+Acceptance criteria:
+- Internal acceptance, security and operational checks pass.
+- Initial invitation cohort is 5–10 users, with controlled expansion only after review.
+- Onboarding completion, task success, retention, provider errors and cost are measured.
+- Feedback intake, support process and rollback procedure are ready.
+- No critical security issue remains open.
 
-## Prioritization
-1. Fix correctness/security issues in existing foundation.
-2. Add reproducible tests and documented CI evidence.
-3. Implement agent CRUD and the runtime with strict permission boundaries.
-4. Add tools and workflows after runtime safeguards exist.
-5. Complete settings and production hardening.
-6. Perform end-to-end, security, accessibility and performance release checks.
+## Phase 7 — Public launch readiness
+**Status: pending; requires a separate go/no-go decision**
+
+Acceptance criteria:
+- Load, security, accessibility and mobile usability reviews pass.
+- Backup/restore and incident runbooks are tested.
+- Monitoring and alerting cover API, database, workers, providers and billing.
+- Privacy, terms, retention and account deletion policies are ready.
+- Closed-beta evidence supports sustainable unit economics and product value.
+
+## Release rules
+
+1. Implement one bounded workstream at a time in a reviewable branch/PR.
+2. Require tests and evidence for every acceptance claim.
+3. Distinguish implemented, CI-tested and production-verified states.
+4. Do not merge to `main` or deploy without explicit approval.
+5. Update `docs/PROGRESS.md` and the relevant product/technical document in the same change set.
