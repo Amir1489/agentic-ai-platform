@@ -16,7 +16,10 @@ from .projects import router as projects_router
 from .conversations import router as conversations_router
 from .agents import router as agents_router
 from .agent_worker import worker_loop
-from .rate_limit import (\n    LOGIN_LIMIT, LOGIN_WINDOW_SECONDS, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS,\n    enforce_auth_rate_limit,\n)
+from .rate_limit import (
+    LOGIN_LIMIT, LOGIN_WINDOW_SECONDS, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS,
+    enforce_auth_rate_limit,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
