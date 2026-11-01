@@ -411,3 +411,35 @@ def test_rate_limit_prunes_expired_buckets():
             )
         with SessionLocal() as db:
             assert db.get(AuthRateLimitBucket, "f" * 64) is None
+
+
+
+def test_rate_limit_counter_is_shared_across_independent_sessions():
+    import hashlib
+    from app.database import SessionLocal
+    from app.models import AuthRateLimitBucket
+    from app.rate_limit import enforce_auth_rate_limit
+    from starlette.requests import Request
+
+    identity = f"multi-session-{time.time_ns()}"
+    request = Request({
+        "type": "http", "http_version": "1.1", "method": "POST",
+        "scheme": "http", "path": "/api/auth/login",
+        "raw_path": b"/api/auth/login", "query_string": b"",
+        "headers": [], "client": ("203.0.113.77", 51004),
+        "server": ("testserver", 80),
+    })
+    for _ in range(2):
+        with SessionLocal() as db:
+            enforce_auth_rate_limit(
+                db, request, scope="session-test", identity=identity,
+                limit=10, window_seconds=900,
+            )
+
+    key = hashlib.sha256(
+        f"session-test:203.0.113.77:{identity}".encode("utf-8")
+    ).hexdigest()
+    with SessionLocal() as verification_db:
+        bucket = verification_db.get(AuthRateLimitBucket, key)
+        assert bucket is not None
+        assert bucket.request_count == 2
