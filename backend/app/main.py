@@ -72,7 +72,7 @@ def ready():
 def register(data: Credentials, request: Request, db: DBSession = Depends(get_db)):
     email = str(data.email).lower()
     enforce_auth_rate_limit(
-        db, request, scope="register", identity=email,
+        db, request, scope="register", identity="",
         limit=REGISTER_LIMIT, window_seconds=REGISTER_WINDOW_SECONDS,
     )
     user = User(email=email, password_hash=password_hash.hash(data.password))
