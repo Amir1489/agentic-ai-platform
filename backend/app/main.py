@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
@@ -14,11 +15,20 @@ from .ai_provider import is_configured as ai_is_configured
 from .projects import router as projects_router
 from .conversations import router as conversations_router
 from .agents import router as agents_router
+from .agent_worker import worker_loop
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    yield
+    worker_task = asyncio.create_task(worker_loop(), name="agent-task-worker")
+    try:
+        yield
+    finally:
+        worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            pass
 
 app = FastAPI(title="Agentic AI Platform API", version="0.2.0", lifespan=lifespan)
 origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,https://amir1489.github.io").split(",") if origin.strip()]
