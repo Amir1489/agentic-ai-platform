@@ -51,7 +51,7 @@ def generate_reply(messages: list[dict[str, str]], system_prompt: str | None = N
         # Retry rate limits and server-side failures; auth and request errors are permanent.
         raise AIProviderError(
             "The AI provider request failed",
-            retryable=(exc.code == 429 or 500 <= exc.code <= 599),
+            retryable=(exc.code in (408, 429) or 500 <= exc.code <= 599),
         ) from exc
     except (URLError, TimeoutError) as exc:
         raise AIProviderError("The AI provider connection failed", retryable=True) from exc
