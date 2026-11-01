@@ -93,7 +93,7 @@ def list_agent_tasks(agent_id: int, auth: tuple[User, LoginSession] = Depends(cu
     ).order_by(AgentTask.created_at.desc()).limit(50)).all()
     return [serialize_task(row) for row in rows]
 
-@router.post("/{agent_id}/tasks", status_code=201)
+@router.post("/{agent_id}/tasks", status_code=202)
 def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
     agent = owned_agent(agent_id, auth[0].id, db)
     prompt = data.input.strip()
@@ -103,34 +103,29 @@ def run_agent(agent_id: int, data: AgentRunInput, auth: tuple[User, LoginSession
         raise HTTPException(status_code=409, detail="Agent must be active before it can run")
     if not is_configured():
         raise HTTPException(status_code=503, detail="AI provider is not configured")
-    task = AgentTask(agent_id=agent.id, owner_id=auth[0].id, input=prompt, status="running")
+
+    task = AgentTask(agent_id=agent.id, owner_id=auth[0].id, input=prompt, status="queued")
     db.add(task)
     db.flush()
-    db.add(AgentTaskEvent(task_id=task.id, event_type="started", detail="Single-step model execution started"))
+    db.add(AgentTaskEvent(
+        task_id=task.id,
+        event_type="queued",
+        detail="Task accepted and waiting for a background worker",
+    ))
     db.commit()
     db.refresh(task)
-    system_prompt = agent.instructions.strip() or "You are a helpful, safe, concise AI agent. Reply in the user's language."
-    system_prompt += "\n\nAgent description: " + agent.description[:500]
-    try:
-        output = generate_reply([{"role": "user", "content": prompt}], system_prompt=system_prompt, model=agent.model)
-        task.output = output[:12000]
-        task.status = "succeeded"
-        task.error = ""
-        task.updated_at = datetime.now(timezone.utc)
-        db.add(AgentTaskEvent(task_id=task.id, event_type="succeeded", detail="Model response stored"))
-        db.commit()
-        db.refresh(task)
-        return serialize_task(task)
-    except Exception:
-        db.rollback()
-        failed_task = db.get(AgentTask, task.id)
-        if failed_task is not None:
-            failed_task.status = "failed"
-            failed_task.error = "The AI provider request failed"
-            failed_task.updated_at = datetime.now(timezone.utc)
-            db.add(AgentTaskEvent(task_id=failed_task.id, event_type="failed", detail=failed_task.error))
-            db.commit()
-        raise HTTPException(status_code=502, detail="The AI provider is temporarily unavailable")
+    return serialize_task(task)
+
+
+@router.get("/{agent_id}/tasks/{task_id}")
+def get_agent_task(agent_id: int, task_id: int, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+    owned_agent(agent_id, auth[0].id, db)
+    task = db.scalar(select(AgentTask).where(
+        AgentTask.id == task_id, AgentTask.agent_id == agent_id, AgentTask.owner_id == auth[0].id
+    ))
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return serialize_task(task)
 
 
 @router.get("/{agent_id}/tasks/{task_id}/events")
