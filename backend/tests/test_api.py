@@ -340,3 +340,42 @@ def test_agent_task_endpoints_enforce_authentication_and_owner_isolation():
         own_events = client.get(events_url, headers=headers_a)
         assert own_events.status_code == 200
         assert [event["type"] for event in own_events.json()] == ["succeeded"]
+
+
+def test_registration_rate_limit_is_shared_and_returns_retry_after(monkeypatch):
+    import app.rate_limit as rate_limit
+
+    monkeypatch.setattr(rate_limit, "REGISTER_LIMIT", 1)
+    monkeypatch.setattr(rate_limit, "REGISTER_WINDOW_SECONDS", 3600)
+    with TestClient(app, client=("203.0.113.40", 51001)) as client:
+        first = client.post("/api/auth/register", json={
+            "email": "rate-register-a@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert first.status_code == 201, first.text
+        blocked = client.post("/api/auth/register", json={
+            "email": "rate-register-b@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert blocked.status_code == 429
+        assert int(blocked.headers["retry-after"]) > 0
+
+
+def test_login_rate_limit_is_scoped_to_account_and_client(monkeypatch):
+    import app.rate_limit as rate_limit
+
+    monkeypatch.setattr(rate_limit, "LOGIN_LIMIT", 2)
+    monkeypatch.setattr(rate_limit, "LOGIN_WINDOW_SECONDS", 900)
+    with TestClient(app, client=("203.0.113.41", 51002)) as client:
+        registered = client.post("/api/auth/register", json={
+            "email": "rate-login@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert registered.status_code == 201, registered.text
+
+        payload = {"email": "rate-login@example.com", "password": "incorrect-password-123"}
+        assert client.post("/api/auth/login", json=payload).status_code == 401
+        assert client.post("/api/auth/login", json=payload).status_code == 401
+        blocked = client.post("/api/auth/login", json=payload)
+        assert blocked.status_code == 429
+        assert int(blocked.headers["retry-after"]) > 0
