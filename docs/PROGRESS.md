@@ -63,6 +63,8 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Added an explicit note that external tools and multi-step workflows remain roadmap items.
 - Fixed the primary landing-page CTA so signed-out visitors are sent to authentication instead of the protected dashboard.
 - Added a dedicated GitHub Actions frontend build workflow for pull requests; it runs TypeScript checking and the Vite production build on Node 22.
+- Latest production smoke on `main` (run [41267114702](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41267114702), 2026-11-01) passed the deployed frontend, API health, and database readiness checks. The capability endpoint reported `chat: false` and `agent_tasks: false`; live AI execution is therefore unavailable until the owner configures a provider privately.
+- The frontend build workflow also runs on `feat/**` branches so this PR can receive a TypeScript/Vite build result before review.
 - Changes are isolated on `feat/landing-page-product-clarity`; no merge or production deployment has occurred. Frontend CI is pending.
 - Rollback: revert the commits on this feature branch; `main` and the live site remain unchanged.
 
