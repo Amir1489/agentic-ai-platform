@@ -33,7 +33,7 @@ def retry_delay_seconds(attempt_count: int, *, jitter: bool = True) -> float:
     attempt = max(1, int(attempt_count))
     delay = min(RETRY_BASE_SECONDS * (2 ** (attempt - 1)), RETRY_MAX_SECONDS)
     if jitter:
-        delay *= random.uniform(1 - RETRY_JITTER_RATIO, 1 + RETRY_JITTER_RATIO)
+        delay = min(delay * random.uniform(1 - RETRY_JITTER_RATIO, 1 + RETRY_JITTER_RATIO), RETRY_MAX_SECONDS)
     return delay
 
 
