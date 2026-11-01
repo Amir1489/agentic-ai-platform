@@ -1,13 +1,22 @@
+import os
+import tempfile
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 import threading
 import time
 
-from sqlalchemy import select
+# This module may be collected before test_api.py, so configure the test DB
+# before importing the application database module.
+db_path = Path(tempfile.mkdtemp()) / "lease-tests.db"
+os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 
-from app.database import SessionLocal
+from sqlalchemy import select
+from app.database import Base, SessionLocal, engine
 from app.models import Agent, AgentTask, AgentTaskEvent, User
 from app import agent_worker
+
+Base.metadata.create_all(bind=engine)
 
 
 def make_task(attempt_count=0, status="running", lease_expired=True):
@@ -50,7 +59,6 @@ def test_expired_lease_is_requeued_and_audited():
         assert task.lease_expires_at is None
         events = db.scalars(select(AgentTaskEvent).where(AgentTaskEvent.task_id == task_id)).all()
         assert any(event.event_type == "recovered" for event in events)
-        # Keep this unit test isolated from later global queue-claim tests.
         task.status = "failed"
         db.commit()
 
@@ -69,8 +77,7 @@ def test_expired_lease_at_attempt_limit_fails():
 def test_claim_is_single_winner_and_increments_attempt():
     task_id = make_task(status="queued", lease_expired=False)
     first = agent_worker.claim_one()
-    assert first is not None
-    assert first["id"] == task_id
+    assert first is not None and first["id"] == task_id
     assert agent_worker.claim_one() is None
     with SessionLocal() as db:
         task = db.get(AgentTask, task_id)
