@@ -64,7 +64,7 @@ def process_one_task() -> bool:
         system_prompt = agent.instructions.strip() or (
             "You are a helpful, safe, concise AI agent. Reply in the user's language."
         )
-        system_prompt += "\\n\\nAgent description: " + agent.description[:500]
+        system_prompt += "\n\nAgent description: " + agent.description[:500]
         model = agent.model
 
         try:
