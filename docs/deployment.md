@@ -44,6 +44,6 @@ The process health endpoint is `/api/health`. Render's configured health check u
 
 - Render free services may spin down while idle, causing a delay on the first request.
 - Alembic is configured and Render runs migrations before startup. The initial baseline is idempotent and adopts existing `create_all` installations without dropping data. Future schema changes must be committed as explicit forward migrations and tested against a database backup before release. SQLAlchemy `create_all` remains as a compatibility fallback during this transition.
-- Email verification, password reset, rate limiting, monitoring and production abuse protections are not implemented.
+- Email verification, password reset, comprehensive monitoring and production abuse protections remain incomplete. Database-backed login and registration rate limits are implemented on the current feature branch and require production validation.
 - Scheduled production smoke checks run every six hours; a successful live database check has not yet been confirmed.
-- Browser bearer tokens are stored in localStorage in this alpha release.
+- Browser Bearer tokens are stored in localStorage in this alpha release. A secure-cookie migration proposal is documented in [AUTH_COOKIE_MIGRATION.md](./AUTH_COOKIE_MIGRATION.md); it is not implemented and requires a shared custom-domain topology.
