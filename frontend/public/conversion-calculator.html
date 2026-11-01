@@ -1,0 +1,666 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ماشین حساب نرخ تبدیل</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+/* ── Layout: single-column centered, RTL, dark-first ── */
+:root {
+  --bg: #1a1a1e;
+  --bg-card: #242428;
+  --bg-card2: #2c2c32;
+  --border: rgba(255,255,255,0.07);
+  --accent: #ECA72C;
+  --accent-glow: rgba(236,167,44,0.28);
+  --accent-dim: rgba(236,167,44,0.12);
+  --fg: #e8e8ec;
+  --fg-muted: #8a8a9a;
+  --fg-dim: #5a5a6a;
+  --success: #4ade80;
+  --radius: 18px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 32px rgba(0,0,0,0.45);
+  --font: 'Vazirmatn', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f0eff4;
+    --bg-card: #ffffff;
+    --bg-card2: #f5f4f9;
+    --border: rgba(0,0,0,0.08);
+    --accent: #c98a18;
+    --accent-glow: rgba(201,138,24,0.18);
+    --accent-dim: rgba(201,138,24,0.10);
+    --fg: #1a1a1e;
+    --fg-muted: #5a5a6a;
+    --fg-dim: #9a9aaa;
+    --shadow: 0 4px 32px rgba(0,0,0,0.10);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f0eff4;
+  --bg-card: #ffffff;
+  --bg-card2: #f5f4f9;
+  --border: rgba(0,0,0,0.08);
+  --accent: #c98a18;
+  --accent-glow: rgba(201,138,24,0.18);
+  --accent-dim: rgba(201,138,24,0.10);
+  --fg: #1a1a1e;
+  --fg-muted: #5a5a6a;
+  --fg-dim: #9a9aaa;
+  --shadow: 0 4px 32px rgba(0,0,0,0.10);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  direction: rtl;
+  min-height: 100%;
+  transition: background 0.3s, color 0.3s;
+}
+
+body {
+  padding-block: 40px 60px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.container {
+  max-width: 680px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  padding-block: 8px 4px;
+}
+.header h1 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--fg);
+}
+.header h1 span {
+  color: var(--accent);
+}
+.header p {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  font-weight: 400;
+}
+
+/* ── Input Card ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(236,167,44,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* glassmorphism accent strip */
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(236,167,44,0.5), transparent);
+  pointer-events: none;
+}
+
+.card-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Grid inputs ── */
+.inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 480px) {
+  .inputs-grid { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+}
+
+.input-wrap {
+  position: relative;
+}
+.input-wrap .unit {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+  pointer-events: none;
+  font-weight: 500;
+}
+
+input[type="number"] {
+  width: 100%;
+  background: var(--bg-card2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 14px;
+  padding-left: 40px;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* ── Button ── */
+.btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--accent);
+  color: #1a1100;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(236,167,44,0.35); }
+.btn:active { transform: translateY(0); }
+
+/* ── Results ── */
+.results {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.4s ease;
+}
+.results.visible { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.results-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 480px) {
+  .results-row { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat-sub {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+}
+
+/* ── Big hero card for extra sales ── */
+.hero-card {
+  background: var(--bg-card);
+  border: 1.5px solid rgba(236,167,44,0.3);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: var(--shadow), 0 0 48px rgba(236,167,44,0.08);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(236,167,44,0.10), transparent 70%);
+  pointer-events: none;
+}
+.hero-card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.hero-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.hero-value {
+  font-size: clamp(2.2rem, 6vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(236,167,44,0.12);
+  position: relative;
+}
+.hero-desc {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+.hero-badge {
+  display: inline-block;
+  margin-top: 14px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(236,167,44,0.25);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ── Chart ── */
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 24px 20px;
+  box-shadow: var(--shadow);
+}
+
+.chart-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 18px;
+}
+
+.chart-bars {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  height: 140px;
+  padding-bottom: 36px;
+  position: relative;
+}
+/* grid lines */
+.chart-bars::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 36px 0;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--border) 0px,
+    var(--border) 1px,
+    transparent 1px,
+    transparent 25%
+  );
+  pointer-events: none;
+}
+
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  height: 100%;
+  position: relative;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.bar {
+  width: min(56px, 65%);
+  border-radius: 6px 6px 3px 3px;
+  transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  min-height: 4px;
+}
+.bar-current {
+  background: var(--bg-card2);
+  border: 1.5px solid rgba(255,255,255,0.12);
+}
+.bar-target {
+  background: linear-gradient(180deg, var(--accent) 0%, rgba(236,167,44,0.7) 100%);
+  box-shadow: 0 -4px 20px rgba(236,167,44,0.35);
+}
+.bar-value {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.bar-current .bar-value { color: var(--fg-muted); }
+.bar-target .bar-value  { color: var(--accent); }
+
+.bar-label {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ── Count-up animation ── */
+@keyframes countUp {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1>ماشین حساب <span>نرخ تبدیل</span></h1>
+    <p>فروش اضافه‌ای که بدون ترافیک بیشتر به دست می‌آید</p>
+  </div>
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="card-title">داده‌های ورودی</div>
+    <div class="inputs-grid">
+      <div class="field">
+        <label for="visitors">بازدیدکننده ماهانه</label>
+        <div class="input-wrap">
+          <span class="unit">👤</span>
+          <input type="number" id="visitors" value="10000" min="1" step="100">
+        </div>
+        <span class="field-hint">تعداد بازدید در ماه</span>
+      </div>
+
+      <div class="field">
+        <label for="currentRate">نرخ تبدیل فعلی</label>
+        <div class="input-wrap">
+          <span class="unit">٪</span>
+          <input type="number" id="currentRate" value="2" min="0.01" max="100" step="0.1">
+        </div>
+        <span class="field-hint">درصد بازدیدکنندگانی که خرید می‌کنند</span>
+      </div>
+
+      <div class="field">
+        <label for="aov">میانگین ارزش سفارش</label>
+        <div class="input-wrap">
+          <span class="unit">﷼</span>
+          <input type="number" id="aov" value="500000" min="1" step="10000">
+        </div>
+        <span class="field-hint">تومان به ازای هر سفارش</span>
+      </div>
+
+      <div class="field">
+        <label for="targetRate">نرخ تبدیل هدف</label>
+        <div class="input-wrap">
+          <span class="unit">٪</span>
+          <input type="number" id="targetRate" value="3" min="0.01" max="100" step="0.1">
+        </div>
+        <span class="field-hint">نرخ تبدیلی که می‌خواهید به آن برسید</span>
+      </div>
+    </div>
+
+    <button class="btn" onclick="calculate()">محاسبه کن</button>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Two side-by-side stats -->
+    <div class="results-row">
+      <div class="stat-card">
+        <div class="stat-label">فروش فعلی ماهانه</div>
+        <div class="stat-value" id="currentSales">۰</div>
+        <div class="stat-sub">تومان در ماه</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">فروش با نرخ هدف</div>
+        <div class="stat-value" id="targetSales">۰</div>
+        <div class="stat-sub">تومان در ماه</div>
+      </div>
+    </div>
+
+    <!-- Hero: extra sales -->
+    <div class="hero-card">
+      <div class="hero-eyebrow">فروش اضافه بدون ترافیک بیشتر</div>
+      <div class="hero-value" id="extraSales">۰</div>
+      <div class="hero-desc">
+        این مبلغ فقط با بهبود نرخ تبدیل — بدون هزینه تبلیغات یا ترافیک بیشتر — به درآمدتان اضافه می‌شود
+      </div>
+      <div class="hero-badge" id="growthBadge">رشد ۰٪</div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="chart-title">مقایسه فروش ماهانه</div>
+      <div class="chart-bars" id="chartBars">
+        <div class="bar-group">
+          <div class="bar-track">
+            <div class="bar bar-current" id="barCurrent" style="height:0%">
+              <span class="bar-value" id="barCurrentLabel"></span>
+            </div>
+          </div>
+          <span class="bar-label">فعلی</span>
+        </div>
+        <div class="bar-group">
+          <div class="bar-track">
+            <div class="bar bar-target" id="barTarget" style="height:0%">
+              <span class="bar-value" id="barTargetLabel"></span>
+            </div>
+          </div>
+          <span class="bar-label">هدف</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Persian numeral formatter
+function fa(n) {
+  return Math.round(n).toLocaleString('fa-IR');
+}
+
+function shortFa(n) {
+  if (n >= 1e9) return fa(n / 1e9) + ' میلیارد';
+  if (n >= 1e6) return fa(n / 1e6) + ' میلیون';
+  return fa(n);
+}
+
+// Count-up animation
+function animateCount(el, from, to, duration, format) {
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    // Ease out expo
+    const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    const val = from + (to - from) * eased;
+    el.textContent = format(val);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function calculate() {
+  const visitors   = parseFloat(document.getElementById('visitors').value)   || 0;
+  const curRate    = parseFloat(document.getElementById('currentRate').value) || 0;
+  const aov        = parseFloat(document.getElementById('aov').value)         || 0;
+  const targetRate = parseFloat(document.getElementById('targetRate').value)  || 0;
+
+  if (!visitors || !curRate || !aov || !targetRate) return;
+
+  const currentSales = visitors * (curRate / 100) * aov;
+  const targetSales  = visitors * (targetRate / 100) * aov;
+  const extraSales   = Math.max(0, targetSales - currentSales);
+  const growthPct    = curRate > 0 ? ((targetRate - curRate) / curRate) * 100 : 0;
+
+  // Show results section
+  const resultsEl = document.getElementById('results');
+  resultsEl.classList.add('visible');
+
+  // Animate numbers
+  const dur = 1200;
+  animateCount(document.getElementById('currentSales'), 0, currentSales, dur, v => fa(v) + ' تومان');
+  animateCount(document.getElementById('targetSales'),  0, targetSales,  dur, v => fa(v) + ' تومان');
+  animateCount(document.getElementById('extraSales'),   0, extraSales,   dur, v => fa(v) + ' تومان');
+
+  // Growth badge
+  document.getElementById('growthBadge').textContent =
+    'رشد ' + fa(growthPct) + '٪ در نرخ تبدیل';
+
+  // Chart bars
+  const max = Math.max(currentSales, targetSales);
+  const maxH = 100; // % of track height
+
+  setTimeout(() => {
+    const curPct    = max > 0 ? (currentSales / max) * maxH : 0;
+    const targetPct = max > 0 ? (targetSales  / max) * maxH : 0;
+
+    const barCurrent = document.getElementById('barCurrent');
+    const barTarget  = document.getElementById('barTarget');
+    barCurrent.style.height = curPct    + '%';
+    barTarget.style.height  = targetPct + '%';
+
+    document.getElementById('barCurrentLabel').textContent = shortFa(currentSales);
+    document.getElementById('barTargetLabel').textContent  = shortFa(targetSales);
+  }, 80);
+}
+
+// Auto-calculate on load with defaults
+window.addEventListener('DOMContentLoaded', () => {
+  calculate();
+});
+
+// Recalculate on Enter
+document.querySelectorAll('input').forEach(inp => {
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+});
+</script>
+
+</body></html>
