@@ -222,3 +222,6 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Updated Persian and English authentication/deployment guidance and the Phase 0 security review.
 - Documentation only: no authentication runtime code, DNS, custom domain, production settings, user sessions, merge or deployment changed.
 - Prerequisite: the project owner must provide/approve a custom domain and hosting configuration before implementation can begin.
+
+
+- PR6 follow-up: added an indexed `window_start`, an Alembic-safe index migration, opportunistic expired-bucket cleanup (maximum 500 rows per auth request), and a regression test. CI passed on the preceding cleanup commit; this bounded-cleanup refinement is being validated separately.
