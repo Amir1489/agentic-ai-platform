@@ -343,10 +343,10 @@ def test_agent_task_endpoints_enforce_authentication_and_owner_isolation():
 
 
 def test_registration_rate_limit_is_shared_and_returns_retry_after(monkeypatch):
-    import app.rate_limit as rate_limit
+    import app.main as main
 
-    monkeypatch.setattr(rate_limit, "REGISTER_LIMIT", 1)
-    monkeypatch.setattr(rate_limit, "REGISTER_WINDOW_SECONDS", 3600)
+    monkeypatch.setattr(main, "REGISTER_LIMIT", 1)
+    monkeypatch.setattr(main, "REGISTER_WINDOW_SECONDS", 3600)
     with TestClient(app, client=("203.0.113.40", 51001)) as client:
         first = client.post("/api/auth/register", json={
             "email": "rate-register-a@example.com",
@@ -362,10 +362,10 @@ def test_registration_rate_limit_is_shared_and_returns_retry_after(monkeypatch):
 
 
 def test_login_rate_limit_is_scoped_to_account_and_client(monkeypatch):
-    import app.rate_limit as rate_limit
+    import app.main as main
 
-    monkeypatch.setattr(rate_limit, "LOGIN_LIMIT", 2)
-    monkeypatch.setattr(rate_limit, "LOGIN_WINDOW_SECONDS", 900)
+    monkeypatch.setattr(main, "LOGIN_LIMIT", 2)
+    monkeypatch.setattr(main, "LOGIN_WINDOW_SECONDS", 900)
     with TestClient(app, client=("203.0.113.41", 51002)) as client:
         registered = client.post("/api/auth/register", json={
             "email": "rate-login@example.com",
