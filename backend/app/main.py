@@ -1,7 +1,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select, text
@@ -16,6 +16,7 @@ from .projects import router as projects_router
 from .conversations import router as conversations_router
 from .agents import router as agents_router
 from .agent_worker import worker_loop
+from .rate_limit import (\n    LOGIN_LIMIT, LOGIN_WINDOW_SECONDS, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS,\n    enforce_auth_rate_limit,\n)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
