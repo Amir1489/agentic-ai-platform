@@ -5,6 +5,7 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-tests.yml'
+      - 'docs/PROGRESS.md'
   push:
     branches: [main, 'feat/**']
     paths:
