@@ -21,12 +21,11 @@ class Session(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class Project(Base):
-    __tablename__ = 'projects'
+    __tablename__ = "projects"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -36,7 +35,6 @@ class Conversation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
 
-
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -44,7 +42,6 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(20))
     content: Mapped[str] = mapped_column(String(12000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-
 
 class Agent(Base):
     __tablename__ = "agents"
@@ -58,7 +55,6 @@ class Agent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
 
-
 class AgentTask(Base):
     __tablename__ = "agent_tasks"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -68,9 +64,13 @@ class AgentTask(Base):
     output: Mapped[str] = mapped_column(String(12000), default="")
     status: Mapped[str] = mapped_column(String(20), default="queued")
     error: Mapped[str] = mapped_column(String(500), default="")
+    worker_id: Mapped[str] = mapped_column(String(100), default="", index=True)
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
-
 
 class AgentTaskEvent(Base):
     __tablename__ = "agent_task_events"
