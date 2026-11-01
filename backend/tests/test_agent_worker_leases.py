@@ -15,8 +15,12 @@ from sqlalchemy import select
 from app.database import Base, SessionLocal, engine
 from app.models import Agent, AgentTask, AgentTaskEvent, User
 from app import agent_worker
+from fastapi.testclient import TestClient
+from app.main import app
 
-Base.metadata.create_all(bind=engine)
+# Reuse the application lifespan so schema creation matches production startup.
+with TestClient(app):
+    pass
 
 
 def make_task(attempt_count=0, status="running", lease_expired=True):
