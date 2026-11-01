@@ -197,4 +197,6 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Recorded known security gaps: missing rate limiting, localStorage bearer-token exposure, account lifecycle gaps and operational monitoring.
 - Added a security review document with priorities, evidence, scope boundaries and phase-exit criteria.
 - No production settings, secrets, database schema or deployed service were changed.
-- Validation is pending CI on the resulting PR; no passing test claim is made yet.
+- Backend API tests: **PASS** — [run 41278858744](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858744).
+- Frontend build checks: **PASS** — [run 41278858742](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858742).
+- Both workflows passed on commit `e852d6d1c17f34675095b475f8b7ebe4b78c3bf4`; this validates the backend test suite and frontend production build, not a security audit or production deployment.
