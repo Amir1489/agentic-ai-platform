@@ -57,6 +57,15 @@ The same commit is on the default branch. CI success proves the automated tests/
 
 ## Release log
 
+### 2026-11-01 — Workspace dashboard live metrics
+- Replaced the misleading dashboard preview label with workspace wording for authenticated users.
+- Dashboard overview now fetches the signed-in user's agents and their persisted task histories through owner-scoped API routes.
+- Active-agent and successful-task counters now display actual API-derived values; they show a neutral placeholder when data cannot be verified rather than fabricated zeroes.
+- Added loading/sync feedback and kept the unauthenticated local preview clearly labelled.
+- Frontend CI is triggered by this change; no local build or production deployment is claimed.
+- Change is isolated on `feat/landing-page-product-clarity`; rollback is a revert of the dashboard commit.
+
+
 ### 2026-11-01 — Landing page product-scope clarity (branch validation pending)
 - Replaced promotional copy that implied tool integrations and complex autonomous execution with an accurate description of the current bounded MVP.
 - Added bilingual responsive cards for agent management, single-step supervised runs, and persistent project/conversation/task history.
