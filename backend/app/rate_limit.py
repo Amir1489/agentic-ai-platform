@@ -2,7 +2,7 @@ import hashlib
 import time
 
 from fastapi import HTTPException, Request
-from sqlalchemy import case, delete
+from sqlalchemy import case, delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session as DBSession
@@ -46,12 +46,15 @@ def enforce_auth_rate_limit(
 
     try:
         # Prune expired windows; window_start has an index for bounded cleanup.
-        db.execute(
-            delete(table).where(
+        expired_keys = (
+            select(table.c.bucket_key)
+            .where(
                 table.c.window_start
                 < now - max(REGISTER_WINDOW_SECONDS, LOGIN_WINDOW_SECONDS)
             )
+            .limit(500)
         )
+        db.execute(delete(table).where(table.c.bucket_key.in_(expired_keys)))
         statement = insert(table).values(
             bucket_key=bucket_key,
             window_start=window_start,
