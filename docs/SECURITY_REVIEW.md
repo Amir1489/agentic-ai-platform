@@ -80,3 +80,5 @@
 ### Authentication rate-limit bucket retention
 
 The database-backed limiter removes expired fixed-window buckets opportunistically during authentication requests. Cleanup uses the indexed `window_start` column and is limited to 500 rows per request to bound maintenance work. Buckets within the longest configured window are retained. This table is not an audit log. The stored SHA-256 bucket key is pseudonymous data, not guaranteed anonymous data.
+
+- Validation coverage includes separate database sessions for shared limiter state, plus Alembic upgrade tests for fresh and pre-existing databases. CI execution is required before considering the change ready.
