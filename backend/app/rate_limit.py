@@ -42,27 +42,32 @@ def enforce_auth_rate_limit(
     elif dialect == "sqlite":
         insert = sqlite_insert
     else:
-        # Do not silently fall back to a per-process limiter in production.
         raise HTTPException(status_code=503, detail="Authentication protection is unavailable")
 
     try:
-        db.execute(delete(table).where(table.c.window_start < now - max(REGISTER_WINDOW_SECONDS, LOGIN_WINDOW_SECONDS)))
+        # Prune expired windows; window_start has an index for bounded cleanup.
+        db.execute(
+            delete(table).where(
+                table.c.window_start
+                < now - max(REGISTER_WINDOW_SECONDS, LOGIN_WINDOW_SECONDS)
+            )
+        )
         statement = insert(table).values(
-        bucket_key=bucket_key,
-        window_start=window_start,
-        request_count=1,
-    )
-    excluded = statement.excluded
-    statement = statement.on_conflict_do_update(
-        index_elements=[table.c.bucket_key],
-        set_={
-            "window_start": excluded.window_start,
-            "request_count": case(
-                (table.c.window_start == excluded.window_start, table.c.request_count + 1),
-                else_=1,
-            ),
-        },
-    ).returning(table.c.window_start, table.c.request_count)
+            bucket_key=bucket_key,
+            window_start=window_start,
+            request_count=1,
+        )
+        excluded = statement.excluded
+        statement = statement.on_conflict_do_update(
+            index_elements=[table.c.bucket_key],
+            set_={
+                "window_start": excluded.window_start,
+                "request_count": case(
+                    (table.c.window_start == excluded.window_start, table.c.request_count + 1),
+                    else_=1,
+                ),
+            },
+        ).returning(table.c.window_start, table.c.request_count)
 
         stored_window, request_count = db.execute(statement).one()
         db.commit()
