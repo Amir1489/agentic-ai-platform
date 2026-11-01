@@ -225,3 +225,5 @@ The same commit is on the default branch. CI success proves the automated tests/
 
 
 - PR6 follow-up: added an indexed `window_start`, an Alembic-safe index migration, opportunistic expired-bucket cleanup (maximum 500 rows per auth request), and a regression test. CI passed on the preceding cleanup commit; this bounded-cleanup refinement is being validated separately.
+
+- Additional PR6 validation coverage: separate SQLAlchemy sessions now verify shared counter persistence; migration tests cover a fresh database and an existing database at revision `0001_initial` receiving the indexed rate-limit table. These tests are awaiting CI.
