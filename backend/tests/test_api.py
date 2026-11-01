@@ -134,6 +134,8 @@ def test_agent_crud_and_owner_isolation():
         agent_id = created.json()["id"]
         assert created.json()["status"] == "draft"
         assert client.get("/api/agents", headers=headers_b).json() == []
+        assert client.get("/api/agents/summary", headers=headers_a).json() == {"active_agents": 0, "successful_tasks": 0}
+        assert client.get("/api/agents/summary", headers=headers_b).json() == {"active_agents": 0, "successful_tasks": 0}
         assert client.put(f"/api/agents/{agent_id}", headers=headers_b, json={**payload, "status": "active"}).status_code == 404
         updated = client.put(f"/api/agents/{agent_id}", headers=headers_a, json={**payload, "name": "Updated helper", "status": "active"})
         assert updated.status_code == 200, updated.text
@@ -189,6 +191,8 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
         history = client.get(f"/api/agents/{agent_id}/tasks", headers=headers)
         assert history.status_code == 200
         assert history.json()[0]["id"] == task["id"]
+        summary = client.get("/api/agents/summary", headers=headers).json()
+        assert summary == {"active_agents": 1, "successful_tasks": 1}
         events = client.get(f"/api/agents/{agent_id}/tasks/{task['id']}/events", headers=headers)
         assert events.status_code == 200
         assert [event["type"] for event in events.json()] == ["queued", "started", "succeeded"]
