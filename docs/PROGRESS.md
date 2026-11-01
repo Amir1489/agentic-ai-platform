@@ -1,6 +1,6 @@
 # Engineering Progress & Release Log
 
-Last updated: 2026-10-31 (UTC)
+Last updated: 2026-11-01 (UTC)
 Current branch: `main`
 Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236808395)`
 
@@ -56,6 +56,15 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-11-01 — Landing page product-scope clarity (branch validation pending)
+- Replaced promotional copy that implied tool integrations and complex autonomous execution with an accurate description of the current bounded MVP.
+- Added bilingual responsive cards for agent management, single-step supervised runs, and persistent project/conversation/task history.
+- Added an explicit note that external tools and multi-step workflows remain roadmap items.
+- Fixed the primary landing-page CTA so signed-out visitors are sent to authentication instead of the protected dashboard.
+- Changes are isolated on `feat/landing-page-product-clarity`; no merge or production deployment has occurred. Frontend CI and deployment checks are pending.
+- Rollback: revert the commits on this feature branch; `main` and the live site remain unchanged.
+
 
 ### 2026-10-31 — Production AI capability check
 - Added a secret-safe smoke check for `/api/capabilities`.
