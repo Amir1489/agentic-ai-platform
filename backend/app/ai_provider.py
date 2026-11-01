@@ -9,7 +9,11 @@ class AIProviderNotConfigured(Exception):
 
 
 class AIProviderError(Exception):
-    pass
+    """Provider failure with a safe retry classification."""
+
+    def __init__(self, message: str, *, retryable: bool = True):
+        super().__init__(message)
+        self.retryable = retryable
 
 
 def is_configured() -> bool:
@@ -41,7 +45,15 @@ def generate_reply(messages: list[dict[str, str]], system_prompt: str | None = N
             data = json.loads(response.read().decode("utf-8"))
         content = data["choices"][0]["message"]["content"]
         if not isinstance(content, str) or not content.strip():
-            raise AIProviderError("The model returned an empty response")
+            raise AIProviderError("The model returned an empty response", retryable=False)
         return content.strip()[:12000]
-    except (HTTPError, URLError, TimeoutError, KeyError, IndexError, ValueError, json.JSONDecodeError) as exc:
-        raise AIProviderError("The AI provider request failed") from exc
+    except HTTPError as exc:
+        # Retry rate limits and server-side failures; auth and request errors are permanent.
+        raise AIProviderError(
+            "The AI provider request failed",
+            retryable=(exc.code == 429 or 500 <= exc.code <= 599),
+        ) from exc
+    except (URLError, TimeoutError) as exc:
+        raise AIProviderError("The AI provider connection failed", retryable=True) from exc
+    except (KeyError, IndexError, ValueError, json.JSONDecodeError) as exc:
+        raise AIProviderError("The AI provider returned an invalid response", retryable=False) from exc
