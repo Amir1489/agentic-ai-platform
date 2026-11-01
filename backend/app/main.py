@@ -69,8 +69,12 @@ def ready():
     return {"status": "ready", "database": "reachable"}
 
 @app.post("/api/auth/register", status_code=201)
-def register(data: Credentials, db: DBSession = Depends(get_db)):
+def register(data: Credentials, request: Request, db: DBSession = Depends(get_db)):
     email = str(data.email).lower()
+    enforce_auth_rate_limit(
+        db, request, scope="register", identity=email,
+        limit=REGISTER_LIMIT, window_seconds=REGISTER_WINDOW_SECONDS,
+    )
     user = User(email=email, password_hash=password_hash.hash(data.password))
     db.add(user)
     try:
@@ -82,7 +86,11 @@ def register(data: Credentials, db: DBSession = Depends(get_db)):
     return {"token": issue_session(db, user), "user": public_user(user)}
 
 @app.post("/api/auth/login")
-def login(data: LoginCredentials, db: DBSession = Depends(get_db)):
+def login(data: LoginCredentials, request: Request, db: DBSession = Depends(get_db)):
+    enforce_auth_rate_limit(
+        db, request, scope="login", identity=str(data.email),
+        limit=LOGIN_LIMIT, window_seconds=LOGIN_WINDOW_SECONDS,
+    )
     user = db.scalar(select(User).where(User.email == str(data.email).lower()))
     if user is None or not password_hash.verify(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
