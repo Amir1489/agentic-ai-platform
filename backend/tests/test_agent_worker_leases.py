@@ -156,6 +156,7 @@ def test_retry_delay_is_exponential_and_capped():
     assert agent_worker.retry_delay_seconds(2, jitter=False) == 10
     assert agent_worker.retry_delay_seconds(3, jitter=False) == 20
     assert agent_worker.retry_delay_seconds(10, jitter=False) == 60
+    assert agent_worker.retry_delay_seconds(10, jitter=True) <= 60
 
 
 def test_retry_is_scheduled_and_not_claimable_early(monkeypatch):
