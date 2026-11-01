@@ -108,3 +108,42 @@ def test_heartbeat_extends_lease_for_current_owner(monkeypatch):
         task = db.get(AgentTask, task_id)
         assert task.lease_expires_at > original_expiry
         assert task.worker_id == agent_worker.WORKER_ID
+
+
+def test_stale_worker_cannot_extend_lease(monkeypatch):
+    task_id = make_task(status="queued", lease_expired=False)
+    claimed = agent_worker.claim_one()
+    assert claimed is not None and claimed["id"] == task_id
+    with SessionLocal() as db:
+        task = db.get(AgentTask, task_id)
+        old_heartbeat = task.heartbeat_at
+        task.worker_id = "replacement-worker"
+        db.commit()
+
+    monkeypatch.setattr(agent_worker, "HEARTBEAT_SECONDS", 0.01)
+    stop = threading.Event()
+    pulse = threading.Thread(target=agent_worker.heartbeat, args=(task_id, stop), daemon=True)
+    pulse.start()
+    pulse.join(timeout=1)
+    assert not pulse.is_alive()
+    with SessionLocal() as db:
+        task = db.get(AgentTask, task_id)
+        assert task.worker_id == "replacement-worker"
+        assert task.heartbeat_at == old_heartbeat
+
+
+def test_stale_worker_cannot_finish_reclaimed_task():
+    task_id = make_task(status="queued", lease_expired=False)
+    claimed = agent_worker.claim_one()
+    assert claimed is not None and claimed["id"] == task_id
+    with SessionLocal() as db:
+        task = db.get(AgentTask, task_id)
+        task.worker_id = "replacement-worker"
+        db.commit()
+
+    agent_worker.finish(task_id, status="succeeded", output="stale result")
+    with SessionLocal() as db:
+        task = db.get(AgentTask, task_id)
+        assert task.status == "running"
+        assert task.worker_id == "replacement-worker"
+        assert task.output != "stale result"
