@@ -340,3 +340,106 @@ def test_agent_task_endpoints_enforce_authentication_and_owner_isolation():
         own_events = client.get(events_url, headers=headers_a)
         assert own_events.status_code == 200
         assert [event["type"] for event in own_events.json()] == ["succeeded"]
+
+
+def test_registration_rate_limit_is_shared_and_returns_retry_after(monkeypatch):
+    import app.main as main
+
+    monkeypatch.setattr(main, "REGISTER_LIMIT", 1)
+    monkeypatch.setattr(main, "REGISTER_WINDOW_SECONDS", 3600)
+    with TestClient(app, client=("203.0.113.40", 51001)) as client:
+        first = client.post("/api/auth/register", json={
+            "email": "rate-register-a@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert first.status_code == 201, first.text
+        blocked = client.post("/api/auth/register", json={
+            "email": "rate-register-b@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert blocked.status_code == 429
+        assert int(blocked.headers["retry-after"]) > 0
+
+
+def test_login_rate_limit_is_scoped_to_account_and_client(monkeypatch):
+    import app.main as main
+
+    monkeypatch.setattr(main, "LOGIN_LIMIT", 2)
+    monkeypatch.setattr(main, "LOGIN_WINDOW_SECONDS", 900)
+    with TestClient(app, client=("203.0.113.41", 51002)) as client:
+        registered = client.post("/api/auth/register", json={
+            "email": "rate-login@example.com",
+            "password": "secure-test-password-123",
+        })
+        assert registered.status_code == 201, registered.text
+
+        payload = {"email": "rate-login@example.com", "password": "incorrect-password-123"}
+        assert client.post("/api/auth/login", json=payload).status_code == 401
+        assert client.post("/api/auth/login", json=payload).status_code == 401
+        blocked = client.post("/api/auth/login", json=payload)
+        assert blocked.status_code == 429
+        assert int(blocked.headers["retry-after"]) > 0
+
+
+
+def test_rate_limit_prunes_expired_buckets():
+    from app.database import SessionLocal
+    from app.models import AuthRateLimitBucket
+    from app.rate_limit import enforce_auth_rate_limit, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS
+    from starlette.requests import Request
+
+    with TestClient(app):
+        with SessionLocal() as db:
+            db.add(AuthRateLimitBucket(
+                bucket_key="f" * 64,
+                window_start=int(time.time()) - 3 * REGISTER_WINDOW_SECONDS,
+                request_count=99,
+            ))
+            db.commit()
+
+        request = Request({
+            "type": "http", "http_version": "1.1", "method": "POST",
+            "scheme": "http", "path": "/api/auth/register",
+            "raw_path": b"/api/auth/register", "query_string": b"",
+            "headers": [], "client": ("203.0.113.42", 51003),
+            "server": ("testserver", 80),
+        })
+        with SessionLocal() as db:
+            enforce_auth_rate_limit(
+                db, request, scope="register", identity="",
+                limit=REGISTER_LIMIT, window_seconds=REGISTER_WINDOW_SECONDS,
+            )
+        with SessionLocal() as db:
+            assert db.get(AuthRateLimitBucket, "f" * 64) is None
+
+
+
+def test_rate_limit_counter_is_shared_across_independent_sessions():
+    import hashlib
+    from app.database import SessionLocal
+    from app.models import AuthRateLimitBucket
+    from app.rate_limit import enforce_auth_rate_limit
+    from starlette.requests import Request
+
+    identity = f"multi-session-{time.time_ns()}"
+    request = Request({
+        "type": "http", "http_version": "1.1", "method": "POST",
+        "scheme": "http", "path": "/api/auth/login",
+        "raw_path": b"/api/auth/login", "query_string": b"",
+        "headers": [], "client": ("203.0.113.77", 51004),
+        "server": ("testserver", 80),
+    })
+    for _ in range(2):
+        with SessionLocal() as db:
+            enforce_auth_rate_limit(
+                db, request, scope="session-test", identity=identity,
+                limit=10, window_seconds=900,
+            )
+
+    key = hashlib.sha256(
+        f"session-test:203.0.113.77:{identity}".encode("utf-8")
+    ).hexdigest()
+    with SessionLocal() as verification_db:
+        bucket = verification_db.get(AuthRateLimitBucket, key)
+        assert bucket is not None
+        assert bucket.request_count == 2

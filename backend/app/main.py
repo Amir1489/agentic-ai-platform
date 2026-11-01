@@ -1,7 +1,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select, text
@@ -16,6 +16,10 @@ from .projects import router as projects_router
 from .conversations import router as conversations_router
 from .agents import router as agents_router
 from .agent_worker import worker_loop
+from .rate_limit import (
+    LOGIN_LIMIT, LOGIN_WINDOW_SECONDS, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS,
+    enforce_auth_rate_limit,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -65,8 +69,12 @@ def ready():
     return {"status": "ready", "database": "reachable"}
 
 @app.post("/api/auth/register", status_code=201)
-def register(data: Credentials, db: DBSession = Depends(get_db)):
+def register(data: Credentials, request: Request, db: DBSession = Depends(get_db)):
     email = str(data.email).lower()
+    enforce_auth_rate_limit(
+        db, request, scope="register", identity="",
+        limit=REGISTER_LIMIT, window_seconds=REGISTER_WINDOW_SECONDS,
+    )
     user = User(email=email, password_hash=password_hash.hash(data.password))
     db.add(user)
     try:
@@ -78,7 +86,11 @@ def register(data: Credentials, db: DBSession = Depends(get_db)):
     return {"token": issue_session(db, user), "user": public_user(user)}
 
 @app.post("/api/auth/login")
-def login(data: LoginCredentials, db: DBSession = Depends(get_db)):
+def login(data: LoginCredentials, request: Request, db: DBSession = Depends(get_db)):
+    enforce_auth_rate_limit(
+        db, request, scope="login", identity=str(data.email),
+        limit=LOGIN_LIMIT, window_seconds=LOGIN_WINDOW_SECONDS,
+    )
     user = db.scalar(select(User).where(User.email == str(data.email).lower()))
     if user is None or not password_hash.verify(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")

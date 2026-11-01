@@ -1,7 +1,7 @@
 # بازبینی امنیتی فاز صفر
 
 **تاریخ:** 2026-11-01  
-**مبنای بررسی:** کد شاخه `feat/landing-page-product-clarity`  
+**مبنای بررسی:** شاخه `feat/database-backed-auth-rate-limit` (روی PR پایه امنیتی)  
 **نوع بررسی:** بازبینی ایستا و طراحی تست؛ نه ممیزی نفوذ مستقل  
 **وضعیت:** یافته‌ها ثبت شده‌اند؛ موارد باز باید پیش از عرضه عمومی بسته شوند.
 
@@ -13,8 +13,8 @@
 
 | اولویت | موضوع | وضعیت فعلی | اقدام لازم |
 |---|---|---|---|
-| P1 | Rate limiting ورود و ثبت‌نام | وجود ندارد | پیاده‌سازی محدودیت پایدار و قابل‌تنظیم، ترجیحاً با storage مشترک در محیط چندپردازه |
-| P1 | ذخیره Bearer token در localStorage | در Frontend استفاده می‌شود | طراحی و آزمایش HttpOnly Cookie و CSRF پیش از عرضه عمومی |
+| P1 | Rate limiting ورود و ثبت‌نام | پیاده‌سازی شد؛ Backend و Frontend CI موفق | محدودیت دیتابیس‌محور مشترک: ثبت‌نام ۲۰ درخواست در ساعت به‌ازای IP و ورود ۵ درخواست در ۱۵ دقیقه به‌ازای IP+حساب؛ بررسی رفتار در محیط Production و تنظیم آستانه‌ها باقی است |
+| P1 | ذخیره Bearer token در localStorage | در Frontend استفاده می‌شود؛ پیشنهاد معماری Cookie امن ثبت شده اما پیاده‌سازی نشده | تهیه دامنه اختصاصی مشترک برای app و API، سپس پیاده‌سازی و تست HttpOnly Cookie، CSRF و CORS پیش از عرضه عمومی |
 | P1 | چرخه عمر حساب | تأیید ایمیل و بازیابی رمز وجود ندارد | تعریف جریان‌های امن و سیاست حذف حساب |
 | P1 | بودجه و محدودیت درخواست AI | کنترل مصرف SaaS هنوز وجود ندارد | محدودیت زمان، هم‌زمانی، اندازه و بودجه در Backend |
 | P2 | نشست‌های منقضی‌شده | هنگام استفاده حذف می‌شوند؛ پاک‌سازی زمان‌بندی‌شده نیست | job پاک‌سازی با batch و retention مشخص |
@@ -33,7 +33,22 @@
 - کلید AI Provider فقط در Backend خوانده می‌شود.
 - endpoint آمادگی دیتابیس فقط `SELECT 1` اجرا می‌کند و جزئیات اتصال را افشا نمی‌کند.
 
-## کار انجام‌شده در این PR
+## به‌روزرسانی پیاده‌سازی محدودسازی درخواست‌ها
+
+- شمارنده‌های اتمیک fixed-window در دیتابیس مشترک ذخیره می‌شوند و بین پردازه‌ها/نمونه‌های Backend مشترک‌اند.
+- شناسه bucket فقط به‌صورت SHA-256 ذخیره می‌شود؛ ایمیل و IP خام در جدول limiter نوشته نمی‌شوند.
+- پاسخ محدودیت HTTP 429 همراه Retry-After است؛ در صورت خرابی storage، احراز هویت با HTTP 503 متوقف می‌شود (fail closed).
+- migration با baseline فعلی سازگار شده و برای دیتابیس تازه و دیتابیس موجود طراحی شده است.
+- Backend API tests و Frontend build checks روی commit `d6719cfd91d0434a96842c42da1834c138fab22c` موفق شدند (runs `41279651417` و `41279651386`). رفتار limiter روی سرویس Production هنوز آزمایش نشده است.
+
+## تصمیم معماری برای Cookie امن
+
+- پیشنهاد مهاجرت در `docs/AUTH_COOKIE_MIGRATION.md` و نسخه فارسی آن در `docs/fa/AUTH_COOKIE_MIGRATION.md` ثبت شد.
+- به‌دلیل تفاوت site بین `github.io` و دامنه Render، استفاده مستقیم از third-party cookie برای Production انتخاب نشد.
+- معماری هدف به زیردامنه‌های HTTPS زیر یک دامنه مشترک، Cookie نشست host-only با پیشوند `__Host-`، CORS دقیق و CSRF وابسته به نشست نیاز دارد.
+- این تغییر صرفاً مستندسازی است؛ کد احراز هویت، DNS، دامنه، تنظیمات Production و روش Bearer فعلی تغییر نکرده‌اند.
+
+## کار انجام‌شده در PR پایه
 
 - تست دسترسی بدون احراز هویت برای فهرست، جزئیات و رویدادهای Task اضافه شد.
 - تست عدم دسترسی کاربر دوم به Task و رویدادهای کاربر اول اضافه شد.
@@ -43,8 +58,8 @@
 ## خارج از دامنه این مرحله
 
 - تغییر روش ذخیره توکن به Cookie.
-- افزودن Rate limiter یا سرویس خارجی جدید.
-- تغییر schema یا اجرای migration جدید.
+- افزودن سرویس rate-limit خارجی؛ limiter دیتابیس‌محور در این شاخه اضافه شده است.
+- تغییرات schema خارج از migration صریح؛ migration `0002_auth_rate_limits` در این شاخه اضافه شده است.
 - تغییر پیکربندی Production یا کلیدهای Provider.
 - تست نفوذ یا ادعای تأیید امنیت مستقل.
 
@@ -60,3 +75,10 @@
 ## محدودیت بررسی
 
 این سند بر اساس خواندن کد و تست‌های مخزن تهیه شده است. پیکربندی واقعی همه سرویس‌های میزبانی، گزارش‌های زیرساخت، تست نفوذ و رفتار همه وابستگی‌های بیرونی در این بررسی تأیید نشده‌اند.
+
+
+### Authentication rate-limit bucket retention
+
+The database-backed limiter removes expired fixed-window buckets opportunistically during authentication requests. Cleanup uses the indexed `window_start` column and is limited to 500 rows per request to bound maintenance work. Buckets within the longest configured window are retained. This table is not an audit log. The stored SHA-256 bucket key is pseudonymous data, not guaranteed anonymous data.
+
+- Validation coverage includes separate database sessions for shared limiter state, plus Alembic upgrade tests for fresh and pre-existing databases. CI execution is required before considering the change ready.

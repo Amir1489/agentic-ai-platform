@@ -20,6 +20,13 @@ class Session(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+class AuthRateLimitBucket(Base):
+    __tablename__ = "auth_rate_limit_buckets"
+    bucket_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_start: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    request_count: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
 class Project(Base):
     __tablename__ = 'projects'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

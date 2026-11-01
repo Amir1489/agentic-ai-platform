@@ -1,7 +1,7 @@
 # Engineering Progress & Release Log
 
 Last updated: 2026-11-01 (UTC)
-Current branch: `main`
+Current reviewed branch: `feat/database-backed-auth-rate-limit` (PR #6; stacked on PR #5)
 Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236808395)`
 
 ## Overall progress
@@ -200,3 +200,30 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Backend API tests: **PASS** — [run 41278858744](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858744).
 - Frontend build checks: **PASS** — [run 41278858742](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858742).
 - Both workflows passed on commit `e852d6d1c17f34675095b475f8b7ebe4b78c3bf4`; this validates the backend test suite and frontend production build, not a security audit or production deployment.
+
+
+### 2026-11-01 — Shared database-backed authentication rate limits
+- Added atomic fixed-window counters stored in the application database for registration and login, shared across backend processes and instances using the same database.
+- Registration is limited to 20 attempts per client address per hour; login is limited to 5 attempts per account and client address per 15-minute window.
+- Persisted bucket identifiers are SHA-256 hashes; raw email addresses and client addresses are not stored in the rate-limit table.
+- Rejected requests return HTTP 429 with a Retry-After header. If the limiter storage is unavailable or the database dialect is unsupported, authentication fails closed with HTTP 503.
+- Added Alembic revision `0002_auth_rate_limits`; it safely handles the existing metadata-driven initial baseline on fresh databases.
+- Added backend tests for registration and login throttling. Backend API tests: **PASS** — [run 41279651417](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41279651417). Frontend build checks: **PASS** — [run 41279651386](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41279651386).
+- Verified on implementation commit `d6719cfd91d0434a96842c42da1834c138fab22c`; documentation is synchronized in PR #6. No production deployment or merge is claimed.
+- Known limitation: fixed-window boundaries can permit a short burst across adjacent windows; proxy-derived client IP headers are intentionally not trusted until trusted-proxy configuration is explicitly designed.
+- Rollback: revert the route integration, limiter module, model, tests and migration together; do not downgrade a live database without an approved data/rollback plan.
+
+
+### 2026-11-01 — Secure cookie authentication architecture proposal
+- Reviewed the current frontend and backend authentication flow and confirmed the frontend stores Bearer tokens in localStorage.
+- Documented a migration design in `docs/AUTH_COOKIE_MIGRATION.md` and `docs/fa/AUTH_COOKIE_MIGRATION.md`.
+- The proposal requires HTTPS app/API subdomains under one owner-controlled registrable domain; direct third-party cookies across GitHub Pages and Render domains are not selected as the production design.
+- Specified the target host-only HttpOnly session cookie, credentialed CORS, strict Origin validation, session-bound CSRF protection, migration sequence, acceptance tests and rollback safeguards.
+- Updated Persian and English authentication/deployment guidance and the Phase 0 security review.
+- Documentation only: no authentication runtime code, DNS, custom domain, production settings, user sessions, merge or deployment changed.
+- Prerequisite: the project owner must provide/approve a custom domain and hosting configuration before implementation can begin.
+
+
+- PR6 follow-up: added an indexed `window_start`, an Alembic-safe index migration, opportunistic expired-bucket cleanup (maximum 500 rows per auth request), and a regression test. CI passed on the preceding cleanup commit; this bounded-cleanup refinement is being validated separately.
+
+- Additional PR6 validation coverage: separate SQLAlchemy sessions now verify shared counter persistence; migration tests cover a fresh database and an existing database at revision `0001_initial` receiving the indexed rate-limit table. These tests are awaiting CI.
