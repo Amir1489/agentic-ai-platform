@@ -9,16 +9,16 @@ from sqlalchemy import create_engine, inspect, text
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
-def _alembic_config(database_url):
+def _alembic_config(database_url, monkeypatch):
     config = Config(str(BACKEND_DIR / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
-    os.environ["DATABASE_URL"] = database_url
+    monkeypatch.setenv("DATABASE_URL", database_url)
     return config
 
 
-def test_fresh_database_migrates_to_head(tmp_path):
+def test_fresh_database_migrates_to_head(tmp_path, monkeypatch):
     database_url = f"sqlite:///{tmp_path / 'fresh.db'}"
-    config = _alembic_config(database_url)
+    config = _alembic_config(database_url, monkeypatch)
 
     command.upgrade(config, "head")
 
@@ -37,7 +37,7 @@ def test_fresh_database_migrates_to_head(tmp_path):
         engine.dispose()
 
 
-def test_existing_rate_limit_table_gets_index_on_upgrade(tmp_path):
+def test_existing_rate_limit_table_gets_index_on_upgrade(tmp_path, monkeypatch):
     database_url = f"sqlite:///{tmp_path / 'existing.db'}"
     engine = create_engine(database_url)
     try:
@@ -58,7 +58,7 @@ def test_existing_rate_limit_table_gets_index_on_upgrade(tmp_path):
     finally:
         engine.dispose()
 
-    config = _alembic_config(database_url)
+    config = _alembic_config(database_url, monkeypatch)
     command.upgrade(config, "head")
 
     engine = create_engine(database_url)
