@@ -174,9 +174,15 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
             return "Fractions represent parts of a whole."
         monkeypatch.setattr(agents, "generate_reply", fake_reply)
         result = client.post(f"/api/agents/{agent_id}/tasks", headers=headers, json={"input": "Explain fractions"})
-        assert result.status_code == 201, result.text
-        task = result.json()
-        assert task["status"] == "succeeded"
+        assert result.status_code == 202, result.text
+        queued = result.json()
+        assert queued["status"] == "queued"
+        task = wait_for_task(
+            client,
+            f"/api/agents/{agent_id}/tasks/{queued['id']}",
+            headers,
+            "succeeded",
+        )
         assert task["output"].startswith("Fractions represent")
         assert seen["model"] == "gpt-4o-mini"
         assert "Explain clearly." in seen["system_prompt"]
