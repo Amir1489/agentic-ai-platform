@@ -123,7 +123,7 @@ def test_stale_worker_cannot_extend_lease(monkeypatch):
 
     monkeypatch.setattr(agent_worker, "HEARTBEAT_SECONDS", 0.01)
     stop = threading.Event()
-    pulse = threading.Thread(target=agent_worker.heartbeat, args=(task_id, stop), daemon=True)
+    pulse = threading.Thread(target=agent_worker.heartbeat, args=(task_id, claimed["lease_token"], stop), daemon=True)
     pulse.start()
     pulse.join(timeout=1)
     assert not pulse.is_alive()
