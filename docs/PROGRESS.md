@@ -208,6 +208,7 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Persisted bucket identifiers are SHA-256 hashes; raw email addresses and client addresses are not stored in the rate-limit table.
 - Rejected requests return HTTP 429 with a Retry-After header. If the limiter storage is unavailable or the database dialect is unsupported, authentication fails closed with HTTP 503.
 - Added Alembic revision `0002_auth_rate_limits`; it safely handles the existing metadata-driven initial baseline on fresh databases.
-- Added backend tests for registration and login throttling. CI validation is pending; no production deployment or merge is claimed.
+- Added backend tests for registration and login throttling. Backend API tests: **PASS** — [run 41279651417](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41279651417). Frontend build checks: **PASS** — [run 41279651386](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41279651386).
+- Verified on implementation commit `d6719cfd91d0434a96842c42da1834c138fab22c`; documentation is synchronized in PR #6. No production deployment or merge is claimed.
 - Known limitation: fixed-window boundaries can permit a short burst across adjacent windows; proxy-derived client IP headers are intentionally not trusted until trusted-proxy configuration is explicitly designed.
 - Rollback: revert the route integration, limiter module, model, tests and migration together; do not downgrade a live database without an approved data/rollback plan.
