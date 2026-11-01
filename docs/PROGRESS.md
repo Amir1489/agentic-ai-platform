@@ -1,7 +1,7 @@
 # Engineering Progress & Release Log
 
 Last updated: 2026-11-01 (UTC)
-Current branch: `main`
+Current reviewed branch: `feat/database-backed-auth-rate-limit` (PR #6; stacked on PR #5)
 Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236808395)`
 
 ## Overall progress
