@@ -44,28 +44,35 @@ def process_one_task() -> bool:
         agent = db.scalar(
             select(Agent).where(Agent.id == task.agent_id, Agent.owner_id == task.owner_id)
         )
+        task_id = task.id
+        prompt = task.input
+        agent_is_active = agent is not None and agent.status == "active"
+        if agent is not None:
+            system_prompt = agent.instructions.strip() or (
+                "You are a helpful, safe, concise AI agent. Reply in the user's language."
+            )
+            system_prompt += "\n\nAgent description: " + agent.description[:500]
+            model = agent.model
+        else:
+            system_prompt = ""
+            model = ""
+
         db.add(AgentTaskEvent(
-            task_id=task.id,
+            task_id=task_id,
             event_type="started",
             detail="Task claimed by background worker",
         ))
         db.commit()
 
-        if agent is None or agent.status != "active":
-            task.status = "failed"
-            task.error = "Agent is unavailable or inactive"
-            task.updated_at = datetime.now(timezone.utc)
-            db.add(AgentTaskEvent(task_id=task.id, event_type="failed", detail=task.error))
-            db.commit()
+        if not agent_is_active:
+            task = db.get(AgentTask, task_id)
+            if task is not None:
+                task.status = "failed"
+                task.error = "Agent is unavailable or inactive"
+                task.updated_at = datetime.now(timezone.utc)
+                db.add(AgentTaskEvent(task_id=task_id, event_type="failed", detail=task.error))
+                db.commit()
             return True
-
-        task_id = task.id
-        prompt = task.input
-        system_prompt = agent.instructions.strip() or (
-            "You are a helpful, safe, concise AI agent. Reply in the user's language."
-        )
-        system_prompt += "\n\nAgent description: " + agent.description[:500]
-        model = agent.model
 
         try:
             # Keep the database transaction closed while waiting on the provider.
