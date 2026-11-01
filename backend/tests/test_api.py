@@ -196,7 +196,11 @@ def test_agent_task_execution_requires_active_agent_and_persists_result(monkeypa
 
 def test_agent_provider_failure_is_recorded(monkeypatch):
     import app.agents as agents
+    import app.agent_worker as worker
     from app.ai_provider import AIProviderError
+
+    # Keep this integration test fast while exercising all bounded retry attempts.
+    monkeypatch.setattr(worker, "retry_delay_seconds", lambda attempt: 0.01)
 
     with TestClient(app) as client:
         registered = client.post("/api/auth/register", json={
@@ -231,7 +235,7 @@ def test_agent_provider_failure_is_recorded(monkeypatch):
         history = client.get(f"/api/agents/{created.json()['id']}/tasks", headers=headers).json()
         assert history[0]["status"] == "failed"
         events = client.get(f"/api/agents/{agent_id}/tasks/{history[0]['id']}/events", headers=headers).json()
-        assert [event["type"] for event in events] == ["queued", "started", "retry", "started", "retry", "started", "failed"]
+        assert [event["type"] for event in events] == ["queued", "started", "retry_scheduled", "started", "retry_scheduled", "started", "failed"]
 
 
 def test_expired_session_is_rejected_and_removed():
