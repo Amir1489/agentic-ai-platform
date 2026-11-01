@@ -62,7 +62,8 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Added bilingual responsive cards for agent management, single-step supervised runs, and persistent project/conversation/task history.
 - Added an explicit note that external tools and multi-step workflows remain roadmap items.
 - Fixed the primary landing-page CTA so signed-out visitors are sent to authentication instead of the protected dashboard.
-- Changes are isolated on `feat/landing-page-product-clarity`; no merge or production deployment has occurred. Frontend CI and deployment checks are pending.
+- Added a dedicated GitHub Actions frontend build workflow for pull requests; it runs TypeScript checking and the Vite production build on Node 22.
+- Changes are isolated on `feat/landing-page-product-clarity`; no merge or production deployment has occurred. Frontend CI is pending.
 - Rollback: revert the commits on this feature branch; `main` and the live site remain unchanged.
 
 
