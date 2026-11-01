@@ -200,3 +200,14 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Backend API tests: **PASS** — [run 41278858744](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858744).
 - Frontend build checks: **PASS** — [run 41278858742](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41278858742).
 - Both workflows passed on commit `e852d6d1c17f34675095b475f8b7ebe4b78c3bf4`; this validates the backend test suite and frontend production build, not a security audit or production deployment.
+
+
+### 2026-11-01 — Shared database-backed authentication rate limits
+- Added atomic fixed-window counters stored in the application database for registration and login, shared across backend processes and instances using the same database.
+- Registration is limited to 20 attempts per client address per hour; login is limited to 5 attempts per account and client address per 15-minute window.
+- Persisted bucket identifiers are SHA-256 hashes; raw email addresses and client addresses are not stored in the rate-limit table.
+- Rejected requests return HTTP 429 with a Retry-After header. If the limiter storage is unavailable or the database dialect is unsupported, authentication fails closed with HTTP 503.
+- Added Alembic revision `0002_auth_rate_limits`; it safely handles the existing metadata-driven initial baseline on fresh databases.
+- Added backend tests for registration and login throttling. CI validation is pending; no production deployment or merge is claimed.
+- Known limitation: fixed-window boundaries can permit a short burst across adjacent windows; proxy-derived client IP headers are intentionally not trusted until trusted-proxy configuration is explicitly designed.
+- Rollback: revert the route integration, limiter module, model, tests and migration together; do not downgrade a live database without an approved data/rollback plan.
