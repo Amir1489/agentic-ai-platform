@@ -23,7 +23,7 @@ class Session(Base):
 class AuthRateLimitBucket(Base):
     __tablename__ = "auth_rate_limit_buckets"
     bucket_key: Mapped[str] = mapped_column(String(64), primary_key=True)
-    window_start: Mapped[int] = mapped_column(Integer, nullable=False)
+    window_start: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     request_count: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
