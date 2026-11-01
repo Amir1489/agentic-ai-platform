@@ -57,6 +57,14 @@ The same commit is on the default branch. CI success proves the automated tests/
 
 ## Release log
 
+### 2026-11-01 — Aggregate workspace metrics endpoint
+- Added authenticated `GET /api/agents/summary` with database-side counts for active agents and successful tasks, scoped to the current user.
+- Replaced the dashboard's per-agent task-history fan-out with one summary request, avoiding N+1 HTTP requests and ensuring successful-task totals are not truncated by the per-agent 50-item history limit.
+- Added API assertions for empty summaries, successful task counts and owner isolation.
+- Backend and frontend CI are required; no production deployment or merge is performed from this branch.
+- Rollback: revert the summary endpoint, its tests and the dashboard consumer together.
+
+
 ### 2026-11-01 — Workspace dashboard live metrics
 - Replaced the misleading dashboard preview label with workspace wording for authenticated users.
 - Dashboard overview now fetches the signed-in user's agents and their persisted task histories through owner-scoped API routes.
