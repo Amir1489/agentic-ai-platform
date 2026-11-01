@@ -212,3 +212,13 @@ The same commit is on the default branch. CI success proves the automated tests/
 - Verified on implementation commit `d6719cfd91d0434a96842c42da1834c138fab22c`; documentation is synchronized in PR #6. No production deployment or merge is claimed.
 - Known limitation: fixed-window boundaries can permit a short burst across adjacent windows; proxy-derived client IP headers are intentionally not trusted until trusted-proxy configuration is explicitly designed.
 - Rollback: revert the route integration, limiter module, model, tests and migration together; do not downgrade a live database without an approved data/rollback plan.
+
+
+### 2026-11-01 — Secure cookie authentication architecture proposal
+- Reviewed the current frontend and backend authentication flow and confirmed the frontend stores Bearer tokens in localStorage.
+- Documented a migration design in `docs/AUTH_COOKIE_MIGRATION.md` and `docs/fa/AUTH_COOKIE_MIGRATION.md`.
+- The proposal requires HTTPS app/API subdomains under one owner-controlled registrable domain; direct third-party cookies across GitHub Pages and Render domains are not selected as the production design.
+- Specified the target host-only HttpOnly session cookie, credentialed CORS, strict Origin validation, session-bound CSRF protection, migration sequence, acceptance tests and rollback safeguards.
+- Updated Persian and English authentication/deployment guidance and the Phase 0 security review.
+- Documentation only: no authentication runtime code, DNS, custom domain, production settings, user sessions, merge or deployment changed.
+- Prerequisite: the project owner must provide/approve a custom domain and hosting configuration before implementation can begin.
