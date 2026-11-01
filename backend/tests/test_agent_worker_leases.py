@@ -199,3 +199,22 @@ def test_stale_lease_token_cannot_finish_or_retry():
         task = db.get(AgentTask, task_id)
         assert task.status == "running"
         assert task.lease_token == claimed["lease_token"]
+
+def test_expired_lease_recovery_applies_backoff(monkeypatch):
+    task_id = make_task(attempt_count=1, status="running", lease_expired=True)
+    monkeypatch.setattr(agent_worker, "retry_delay_seconds", lambda attempt: 30)
+
+    assert agent_worker.recover_expired_tasks() >= 1
+
+    with SessionLocal() as db:
+        task = db.get(AgentTask, task_id)
+        assert task.status == "queued"
+        assert task.next_retry_at is not None
+        retry_at = task.next_retry_at
+        if retry_at.tzinfo is None:  # SQLite returns naive datetimes for timezone-aware columns.
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        assert retry_at > datetime.now(timezone.utc)
+        assert task.lease_token == ""
+
+    # Recovery must not make the task immediately claimable.
+    assert agent_worker.claim_one() is None
