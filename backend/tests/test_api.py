@@ -379,3 +379,35 @@ def test_login_rate_limit_is_scoped_to_account_and_client(monkeypatch):
         blocked = client.post("/api/auth/login", json=payload)
         assert blocked.status_code == 429
         assert int(blocked.headers["retry-after"]) > 0
+
+
+
+def test_rate_limit_prunes_expired_buckets():
+    from app.database import SessionLocal
+    from app.models import AuthRateLimitBucket
+    from app.rate_limit import enforce_auth_rate_limit, REGISTER_LIMIT, REGISTER_WINDOW_SECONDS
+    from starlette.requests import Request
+
+    with TestClient(app):
+        with SessionLocal() as db:
+            db.add(AuthRateLimitBucket(
+                bucket_key="f" * 64,
+                window_start=int(time.time()) - 3 * REGISTER_WINDOW_SECONDS,
+                request_count=99,
+            ))
+            db.commit()
+
+        request = Request({
+            "type": "http", "http_version": "1.1", "method": "POST",
+            "scheme": "http", "path": "/api/auth/register",
+            "raw_path": b"/api/auth/register", "query_string": b"",
+            "headers": [], "client": ("203.0.113.42", 51003),
+            "server": ("testserver", 80),
+        })
+        with SessionLocal() as db:
+            enforce_auth_rate_limit(
+                db, request, scope="register", identity="",
+                limit=REGISTER_LIMIT, window_seconds=REGISTER_WINDOW_SECONDS,
+            )
+        with SessionLocal() as db:
+            assert db.get(AuthRateLimitBucket, "f" * 64) is None
