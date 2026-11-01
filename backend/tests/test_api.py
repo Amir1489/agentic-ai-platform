@@ -276,3 +276,67 @@ def test_cors_preflight_allows_agent_update():
         allowed_methods = response.headers.get("access-control-allow-methods", "")
         assert "PUT" in allowed_methods
         assert response.headers.get("access-control-allow-origin") == "https://amir1489.github.io"
+
+
+
+def test_agent_task_endpoints_enforce_authentication_and_owner_isolation():
+    from app.database import SessionLocal
+    from app.models import Agent, AgentTask, AgentTaskEvent
+
+    with TestClient(app) as client:
+        registered_a = client.post("/api/auth/register", json={
+            "email": "task-owner-a@example.com",
+            "password": "secure-test-password-123"
+        })
+        registered_b = client.post("/api/auth/register", json={
+            "email": "task-owner-b@example.com",
+            "password": "secure-test-password-123"
+        })
+        assert registered_a.status_code == 201
+        assert registered_b.status_code == 201
+        headers_a = {"Authorization": "Bearer " + registered_a.json()["token"]}
+        headers_b = {"Authorization": "Bearer " + registered_b.json()["token"]}
+
+        created = client.post("/api/agents", headers=headers_a, json={
+            "name": "Private task agent",
+            "description": "Owner-scoped test agent",
+            "instructions": "Test only",
+            "model": "gpt-4o-mini",
+        })
+        assert created.status_code == 201
+        agent_id = created.json()["id"]
+
+        with SessionLocal() as db:
+            task = AgentTask(
+                agent_id=agent_id,
+                owner_id=registered_a.json()["user"]["id"],
+                input="private task input",
+                output="private task output",
+                status="succeeded",
+            )
+            db.add(task)
+            db.flush()
+            task_id = task.id
+            db.add(AgentTaskEvent(
+                task_id=task_id,
+                event_type="succeeded",
+                detail="private event detail",
+            ))
+            db.commit()
+
+        task_url = f"/api/agents/{agent_id}/tasks/{task_id}"
+        events_url = task_url + "/events"
+        assert client.get(f"/api/agents/{agent_id}/tasks").status_code == 401
+        assert client.get(task_url).status_code == 401
+        assert client.get(events_url).status_code == 401
+
+        assert client.get(f"/api/agents/{agent_id}/tasks", headers=headers_b).status_code == 404
+        assert client.get(task_url, headers=headers_b).status_code == 404
+        assert client.get(events_url, headers=headers_b).status_code == 404
+
+        own_task = client.get(task_url, headers=headers_a)
+        assert own_task.status_code == 200
+        assert own_task.json()["input"] == "private task input"
+        own_events = client.get(events_url, headers=headers_a)
+        assert own_events.status_code == 200
+        assert [event["type"] for event in own_events.json()] == ["succeeded"]

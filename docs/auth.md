@@ -1,31 +1,53 @@
-# Authentication
+# احراز هویت و مدیریت نشست
 
-FastAPI provides registration, login, current-session validation and logout endpoints backed by SQLAlchemy and PostgreSQL.
+## مسیرهای پیاده‌سازی‌شده
 
-## Implemented
+- `POST /api/auth/register`: ساخت حساب و صدور نشست Bearer.
+- `POST /api/auth/login`: بررسی اعتبارنامه و صدور نشست.
+- `GET /api/auth/me`: اعتبارسنجی نشست جاری.
+- `POST /api/auth/logout`: لغو نشست جاری.
+- رمز عبور با Argon2 و از طریق `pwdlib` هش می‌شود.
+- توکن نشست با مولد امن رمزنگاری ساخته می‌شود؛ فقط SHA-256 digest آن در دیتابیس ذخیره می‌شود.
+- عمر نشست ۷ روز است و نشست منقضی‌شده هنگام استفاده رد و حذف می‌شود.
+- endpointهای محافظت‌شده از وابستگی `current_session` استفاده می‌کنند.
 
-- `POST /api/auth/register`: creates an account and returns a bearer session token.
-- `POST /api/auth/login`: validates credentials and returns a bearer session token.
-- `GET /api/auth/me`: validates the current bearer token and returns the user.
-- `POST /api/auth/logout`: revokes the current session.
-- Passwords are hashed with Argon2.
-- Session tokens are cryptographically random. Only SHA-256 token digests are stored in the database.
-- Sessions expire after seven days.
-- The frontend persists the current token and user in localStorage and validates the session with `/api/auth/me` on application startup.
+## ذخیره توکن در مرورگر
 
-## Deployment
+نسخه فعلی Frontend توکن Bearer را در `localStorage` نگه می‌دارد و هنگام شروع برنامه با `/api/auth/me` اعتبار آن را بررسی می‌کند. این انتخاب برای نسخه آزمایشی ساده است، اما در صورت وقوع XSS می‌تواند دسترسی مهاجم به توکن را ممکن کند.
 
-1. Set `DATABASE_URL` to the PostgreSQL Session Pooler URI supplied by the database provider.
-2. Set `CORS_ORIGINS` to the exact frontend origin.
-3. Set the GitHub Actions repository variable `VITE_API_URL` to the public HTTPS backend origin, without a trailing slash.
-4. Keep database credentials private and outside the frontend build.
+**این روش برای عرضه عمومی، تصمیم نهایی امنیتی محسوب نمی‌شود.** پیش از عرضه عمومی باید طراحی Cookie امن با `HttpOnly`، `Secure`، سیاست `SameSite` و محافظت CSRF بررسی و با توجه به میزبانی جداگانه Frontend و Backend آزمایش شود. مهاجرت به Cookie نباید بدون تست کامل جریان ورود، خروج، CORS و CSRF انجام شود.
 
-## Security limitations
+## کنترل‌های موجود
 
-- Email verification and password reset are not implemented.
-- Rate limiting, bot protection, monitoring and abuse prevention are not implemented.
-- Database schema changes are not managed by migrations yet; startup currently uses SQLAlchemy `create_all`, which does not alter existing tables.
-- The frontend stores bearer tokens in localStorage. This is convenient for the current alpha but increases the impact of any cross-site scripting (XSS) vulnerability. A production authentication design should consider secure HttpOnly cookies and appropriate CSRF protections.
-- Expired sessions are rejected when used, but there is no scheduled cleanup job for old session rows.
+- حداقل طول رمز عبور ۱۰ و حداکثر ۱۲۸ کاراکتر.
+- ایمیل با Pydantic اعتبارسنجی می‌شود.
+- نشست‌ها تاریخ انقضا دارند.
+- توکن خام در دیتابیس ذخیره نمی‌شود.
+- endpointهای داده‌محور باید مالکیت منابع را در Backend بررسی کنند.
+- تست انقضای نشست و جداسازی مالکیت Agent/Task در `backend/tests/test_api.py` نگهداری می‌شود.
 
-Treat this project as an alpha, not a production-ready identity system. Never commit or share database passwords, bearer tokens or other private credentials.
+## شکاف‌های امنیتی شناخته‌شده
+
+- Rate limiting و محافظت در برابر brute-force برای ثبت‌نام و ورود هنوز پیاده‌سازی نشده است.
+- تأیید ایمیل و بازیابی رمز عبور وجود ندارد.
+- توکن در `localStorage` ذخیره می‌شود؛ پیش از عرضه عمومی باید درباره آن تصمیم امنیتی گرفته شود.
+- پاک‌سازی زمان‌بندی‌شده نشست‌های منقضی‌شده وجود ندارد.
+- فرایند حذف حساب و داده‌های کاربر هنوز باید تعریف و آزموده شود.
+- پایش رخدادهای امنیتی و هشداردهی هنوز کامل نیست.
+
+## مهاجرت دیتابیس
+
+- Alembic در `backend/migrations` پیکربندی شده است.
+- Render پیش از اجرای Uvicorn فرمان `alembic upgrade head` را اجرا می‌کند.
+- revision اولیه `0001_initial` یک baseline سازگار برای ایجاد جدول‌های موجود است.
+- برنامه در startup نیز `Base.metadata.create_all` را اجرا می‌کند؛ این فراخوانی جدول‌های مفقود را می‌سازد اما تغییر ستون‌های موجود را جایگزین migration نمی‌کند.
+- هر تغییر schema جدید باید migration صریح Alembic داشته باشد و با تست migration بررسی شود.
+
+## استقرار
+
+- `DATABASE_URL` فقط در محیط Backend تنظیم شود.
+- `CORS_ORIGINS` فقط شامل originهای موردنیاز و دقیق باشد.
+- `VITE_API_URL` یک متغیر build عمومی است و نباید حاوی secret باشد.
+- کلید Provider، توکن نشست، رمز دیتابیس و سایر اسرار نباید در Git، Frontend یا log ثبت شوند.
+
+این سامانه هنوز باید نسخه alpha/beta تلقی شود؛ وجود تست‌های فعلی به معنی ممیزی امنیتی مستقل یا آمادگی عرضه عمومی نیست.
