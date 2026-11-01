@@ -125,26 +125,26 @@
 
 ## مرحله Lease و بازیابی Task — ۱ نوامبر ۲۰۲۶
 
-**وضعیت: پیاده‌سازی اولیه روی شاخه توسعه ثبت شده؛ بررسی و CI هنوز کامل نیست.**
+**وضعیت: پیاده‌سازی اولیه و آزمون‌های واحد در شاخه توسعه؛ CI موفق. انتشار عملیاتی انجام نشده است.**
 
 - [x] محدوده کار و معیارهای پذیرش تأیید شد.
 - [x] مدل Task برای worker_id، claimed_at، heartbeat_at، lease_expires_at و attempt_count گسترش یافت.
-- [x] migration صریح `0002_agent_task_leases` اضافه شد.
+- [x] migration صریح و تکرارپذیر `0002_agent_task_leases` اضافه شد.
 - [x] claim شرطی و ثبت مالک Worker پیاده‌سازی شد.
 - [x] heartbeat دوره‌ای با Session مستقل اضافه شد؛ تراکنش هنگام انتظار مدل باز نمی‌ماند.
 - [x] بازیابی Taskهای running با lease منقضی‌شده اضافه شد.
 - [x] سقف تلاش روی ۳ تنظیم شد؛ رویدادهای recovered، retry و failed ثبت می‌شوند.
+- [x] آزمون انقضای lease، رسیدن به سقف تلاش، claim تک‌برنده و تمدید heartbeat اضافه شد.
 - [x] مستند فنی فارسی در `docs/fa/agent-task-reliability.md` اضافه شد.
-- [x] آزمون موجود شکست ارائه‌دهنده با رفتار retry محدود هماهنگ شد.
-- [ ] آزمون مستقل انقضای lease و بازیابی پس از crash.
-- [ ] آزمون رقابت چند Worker و مالکیت اجرای هم‌زمان.
-- [ ] اجرای موفق CI روی شاخه توسعه.
-- [ ] بررسی migration روی PostgreSQL و اجرای smoke.
+- [x] CI: بررسی تکرارپذیری Alembic و مجموعه pytest موفق؛ **۱۱ آزمون موفق** — [اجرای 41268841092](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41268841092).
+- [ ] آزمون واقعی رقابت هم‌زمان چند Worker روی PostgreSQL.
+- [ ] آزمون یکپارچه توقف فرایند Worker و بازیابی Task پس از راه‌اندازی مجدد.
+- [ ] اجرای Migration روی PostgreSQL عملیاتی و smoke پس از آن.
 - [ ] بازبینی نهایی و ادغام در main.
 
 ### شناسه‌های تغییر
 - شاخه: [feat/worker-task-leases](https://github.com/Amir1489/agentic-ai-platform/tree/feat/worker-task-leases)
-- کامیت پیاده‌سازی: [719cb366](https://github.com/Amir1489/agentic-ai-platform/commit/719cb3660085cce0eb48d43ce6cfcf09ec03b596)
-- کامیت سازگاری آزمون retry: [9955728](https://github.com/Amir1489/agentic-ai-platform/commit/9955728e1830967416c54057fdf0e9ad0d9166af)
+- آخرین کامیت در این ثبت: [c07778f2](https://github.com/Amir1489/agentic-ai-platform/commit/c07778f2e5ec04fed55cbd9123ea29421440b528)
+- Pull Request: [شماره ۱](https://github.com/Amir1489/agentic-ai-platform/pull/1)
 
-**محدودیت مهم:** این تغییرات هنوز روی main یا محیط عملیاتی منتشر نشده‌اند. تا زمانی که CI و migration در PostgreSQL تأیید نشوند، قابلیت بازیابی را نباید فعال‌شده در محصول دانست. Worker همچنان درون فرایند API است و صف مستقل، لغو Task و timeout اختصاصی provider در این مرحله وجود ندارند.
+**محدودیت مهم:** این تغییرات هنوز روی main یا محیط عملیاتی منتشر نشده‌اند. CI فعلی روی SQLite اجرا شده و موفقیت آن، اجرای Migration روی PostgreSQL عملیاتی را ثابت نمی‌کند. آزمون‌های جدید انقضای lease و بازیابی وضعیت را پوشش می‌دهند، اما آزمون واقعی crash و رقابت هم‌زمان چند Worker هنوز باقی است. Worker همچنان درون فرایند API است و صف مستقل، لغو Task و timeout اختصاصی provider در این مرحله وجود ندارند.
