@@ -169,7 +169,10 @@ def test_retry_is_scheduled_and_not_claimable_early(monkeypatch):
         task = db.get(AgentTask, task_id)
         assert task.status == "queued"
         assert task.next_retry_at is not None
-        assert task.next_retry_at > datetime.now(timezone.utc)
+        retry_at = task.next_retry_at
+        if retry_at.tzinfo is None:  # SQLite returns naive datetimes for timezone-aware columns.
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        assert retry_at > datetime.now(timezone.utc)
         assert task.worker_id == ""
         assert task.lease_token == ""
     assert agent_worker.claim_one() is None
