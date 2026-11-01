@@ -18,7 +18,30 @@ export default function AgentsPanel({lang,token}:{lang:Lang;token?:string|null})
  useEffect(()=>{void load()},[load]);
  async function create(e:React.FormEvent){e.preventDefault();if(!api||!token||busy||!name.trim())return;setBusy(true);setError('');try{const r=await fetch(api+'/api/agents',{method:'POST',headers,body:JSON.stringify({name,description,instructions,model})});if(!r.ok)throw Error();const a:Agent=await r.json();setAgents(v=>[a,...v]);setOpen(false);setName('');setDescription('');setInstructions('')}catch{setError(t.error)}finally{setBusy(false)}}
  async function changeStatus(agent:Agent){if(!api||!token||busy)return;setBusy(true);try{const status=agent.status==='active'?'paused':'active';const r=await fetch(api+'/api/agents/'+agent.id,{method:'PUT',headers,body:JSON.stringify({...agent,status})});if(!r.ok)throw Error();const updated:Agent=await r.json();setAgents(v=>v.map(x=>x.id===agent.id?updated:x))}catch{setError(t.error)}finally{setBusy(false)}}
- async function run(agent:Agent){if(!api||!token||busy||runningId!==null||agent.status!=='active'||!taskInput.trim())return;setRunningId(agent.id);setError('');try{const r=await fetch(api+'/api/agents/'+agent.id+'/tasks',{method:'POST',headers,body:JSON.stringify({input:taskInput.trim()})});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:t.error);setOutputs(v=>({...v,[agent.id]:data.output||''}));setTasks(v=>({...v,[agent.id]:[{id:data.id,input:data.input,output:data.output,status:data.status,created:data.created},...(v[agent.id]||[])].slice(0,50)}));}catch(e){setError(e instanceof Error?e.message:t.error)}finally{setRunningId(null)}}
+ async function run(agent:Agent){
+  if(!api||!token||busy||runningId!==null||agent.status!=='active'||!taskInput.trim())return;
+  setRunningId(agent.id);setError('');
+  try{
+   const response=await fetch(api+'/api/agents/'+agent.id+'/tasks',{method:'POST',headers,body:JSON.stringify({input:taskInput.trim()})});
+   const accepted=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(typeof accepted.detail==='string'?accepted.detail:t.error);
+   const queued:Task={id:accepted.id,input:accepted.input,output:'',status:accepted.status,created:accepted.created};
+   setTasks(v=>({...v,[agent.id]:[queued,...(v[agent.id]||[])].slice(0,50)}));
+   let completed:Task|null=null;
+   for(let attempt=0;attempt<90;attempt++){
+    await new Promise(resolve=>window.setTimeout(resolve,1000));
+    const statusResponse=await fetch(api+'/api/agents/'+agent.id+'/tasks/'+accepted.id,{headers});
+    if(!statusResponse.ok)throw Error(t.error);
+    const current:Task=await statusResponse.json();
+    setTasks(v=>({...v,[agent.id]:(v[agent.id]||[]).map(item=>item.id===current.id?current:item)}));
+    if(current.status==='succeeded'||current.status==='failed'){completed=current;break;}
+   }
+   if(!completed)throw Error(lang==='fa'?'وظیفه هنوز در حال اجراست؛ وضعیت آن در تاریخچه قابل پیگیری است.':'Task is still running; check its status in history.');
+   if(completed.status==='failed')throw Error(lang==='fa'?'اجرای ایجنت ناموفق بود.':'Agent task failed.');
+   setOutputs(v=>({...v,[agent.id]:completed?.output||''}));
+  }catch(e){setError(e instanceof Error?e.message:t.error)}
+  finally{setRunningId(null)}
+ }
  async function remove(agent:Agent){if(!api||!token||busy||!window.confirm(t.confirm))return;setBusy(true);try{const r=await fetch(api+'/api/agents/'+agent.id,{method:'DELETE',headers});if(!r.ok)throw Error();setAgents(v=>v.filter(x=>x.id!==agent.id))}catch{setError(t.error)}finally{setBusy(false)}}
  return <section className="dash-panel" dir={lang==='fa'?'rtl':'ltr'}>
   <div className="dash-heading"><div><h2>{t.title}</h2></div><button className="dash-create" onClick={()=>setOpen(true)} disabled={busy}><Plus size={18}/>{t.new}</button></div>
