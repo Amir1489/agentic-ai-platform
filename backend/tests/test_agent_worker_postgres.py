@@ -4,6 +4,7 @@ Run separately from the SQLite unit suite with DATABASE_URL pointing at a
 disposable PostgreSQL database whose schema has been migrated with Alembic.
 """
 from concurrent.futures import ThreadPoolExecutor
+import pytest
 from datetime import datetime, timedelta, timezone
 from threading import Barrier
 import subprocess
@@ -12,9 +13,15 @@ from uuid import uuid4
 
 from sqlalchemy import select
 
-from app.database import SessionLocal
+from app.database import SessionLocal, engine
 from app.models import Agent, AgentTask, AgentTaskEvent, User
 from app import agent_worker
+
+# These tests require PostgreSQL row-locking semantics and run in a dedicated CI step.
+pytestmark = pytest.mark.skipif(
+    engine.dialect.name != "postgresql",
+    reason="PostgreSQL integration tests run only against the dedicated PostgreSQL service",
+)
 
 
 def test_concurrent_workers_only_claim_a_task_once():
@@ -63,6 +70,14 @@ def test_concurrent_workers_only_claim_a_task_once():
         assert claimed.status == "running"
         assert claimed.worker_id == agent_worker.WORKER_ID
         assert claimed.attempt_count == 1
+
+        # Leave no running lease behind for the next integration test.
+        claimed.status = "succeeded"
+        claimed.worker_id = ""
+        claimed.claimed_at = None
+        claimed.heartbeat_at = None
+        claimed.lease_expires_at = None
+        db.commit()
 
 
 def test_fresh_process_recovers_tasks_left_by_previous_worker():
@@ -131,10 +146,13 @@ def test_fresh_process_recovers_tasks_left_by_previous_worker():
     )
     completed = subprocess.run(
         [sys.executable, "-c", script],
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
         timeout=20,
+    )
+    assert completed.returncode == 0, (
+        "Fresh worker process failed during recovery: " + completed.stderr
     )
     new_worker_id, recovered_count = completed.stdout.strip().split("|", 1)
 
