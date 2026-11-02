@@ -4,6 +4,10 @@ Run separately from the SQLite unit suite with DATABASE_URL pointing at a
 disposable PostgreSQL database whose schema has been migrated with Alembic.
 """
 from concurrent.futures import ThreadPoolExecutor
+import json
+import os
+from pathlib import Path
+import time
 import pytest
 from datetime import datetime, timedelta, timezone
 from threading import Barrier
@@ -79,6 +83,121 @@ def test_concurrent_workers_only_claim_a_task_once():
         claimed.lease_expires_at = None
         db.commit()
 
+
+
+def test_separate_processes_only_one_claims_a_task(tmp_path):
+    """Independent worker processes cannot claim the same PostgreSQL task."""
+    suffix = uuid4().hex
+    with SessionLocal() as db:
+        user = User(email=f"pg-process-claim-{suffix}@example.com", password_hash="test-hash")
+        db.add(user)
+        db.flush()
+        agent = Agent(
+            owner_id=user.id,
+            name="PostgreSQL process claim agent",
+            description="",
+            instructions="Be concise",
+            model="gpt-4o-mini",
+            status="active",
+        )
+        db.add(agent)
+        db.flush()
+        task = AgentTask(
+            agent_id=agent.id,
+            owner_id=user.id,
+            input="Multi-process claim test",
+            status="queued",
+        )
+        db.add(task)
+        db.commit()
+        task_id = task.id
+
+    workers = 8
+    ready_dir = tmp_path / "ready"
+    ready_dir.mkdir()
+    gate = tmp_path / "start"
+    script = """import json, os, time
+from pathlib import Path
+from app import agent_worker
+
+ready_dir = Path(os.environ["CLAIM_READY_DIR"])
+(ready_dir / os.environ["CLAIM_SLOT"]).touch()
+gate = Path(os.environ["CLAIM_GATE"])
+deadline = time.monotonic() + 15
+while not gate.exists():
+    if time.monotonic() >= deadline:
+        raise SystemExit("claim start gate timed out")
+    time.sleep(0.01)
+
+claimed = agent_worker.claim_one()
+print(json.dumps({
+    "worker_id": agent_worker.WORKER_ID,
+    "task_id": claimed["id"] if claimed else None,
+}))
+"""
+    base_env = os.environ.copy()
+    base_env["CLAIM_READY_DIR"] = str(ready_dir)
+    base_env["CLAIM_GATE"] = str(gate)
+    backend_dir = Path(__file__).resolve().parents[1]
+    processes = []
+
+    try:
+        for slot in range(workers):
+            env = {**base_env, "CLAIM_SLOT": str(slot)}
+            processes.append(subprocess.Popen(
+                [sys.executable, "-c", script],
+                cwd=backend_dir,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            ))
+
+        deadline = time.monotonic() + 15
+        while len(list(ready_dir.iterdir())) < workers:
+            exited = [process for process in processes if process.poll() is not None]
+            if exited:
+                details = []
+                for process in processes:
+                    if process.poll() is None:
+                        process.kill()
+                    stdout, stderr = process.communicate(timeout=5)
+                    details.append(f"exit={process.returncode}; stderr={stderr}; stdout={stdout}")
+                raise AssertionError("Worker process failed before barrier: " + " | ".join(details))
+            if time.monotonic() >= deadline:
+                raise AssertionError("Worker processes did not reach the start barrier")
+            time.sleep(0.01)
+
+        gate.touch()
+        results = []
+        for process in processes:
+            stdout, stderr = process.communicate(timeout=20)
+            assert process.returncode == 0, stderr
+            results.append(json.loads(stdout.strip()))
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=5)
+
+    worker_ids = [result["worker_id"] for result in results]
+    winners = [result for result in results if result["task_id"] == task_id]
+    assert len(set(worker_ids)) == workers
+    assert len(winners) == 1
+
+    with SessionLocal() as db:
+        claimed = db.get(AgentTask, task_id)
+        assert claimed.status == "running"
+        assert claimed.worker_id == winners[0]["worker_id"]
+        assert claimed.attempt_count == 1
+
+        # Clean up the lease so later recovery tests see only their own rows.
+        claimed.status = "succeeded"
+        claimed.worker_id = ""
+        claimed.claimed_at = None
+        claimed.heartbeat_at = None
+        claimed.lease_expires_at = None
+        db.commit()
 
 def test_fresh_process_recovers_tasks_left_by_previous_worker():
     """A new process recovers persisted leases without relying on old memory."""
