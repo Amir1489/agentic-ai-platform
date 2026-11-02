@@ -231,7 +231,7 @@ def test_agent_provider_failure_is_recorded(monkeypatch):
         history = client.get(f"/api/agents/{created.json()['id']}/tasks", headers=headers).json()
         assert history[0]["status"] == "failed"
         events = client.get(f"/api/agents/{agent_id}/tasks/{history[0]['id']}/events", headers=headers).json()
-        assert [event["type"] for event in events] == ["queued", "started", "failed"]
+        assert [event["type"] for event in events] == ["queued", "started", "retry", "started", "retry", "started", "failed"]
 
 
 def test_expired_session_is_rejected_and_removed():
