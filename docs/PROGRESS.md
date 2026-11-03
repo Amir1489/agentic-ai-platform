@@ -1,6 +1,6 @@
 # Engineering Progress & Release Log
 
-Last updated: 2026-10-31 (UTC)
+Last updated: 2026-11-01 (UTC)
 Current branch: `main`
 Latest backend CI: [run 41236808395](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41236808395)`
 
@@ -56,6 +56,35 @@ For commit `fe68d11`:
 The same commit is on the default branch. CI success proves the automated tests/build completed; it does **not** prove the production Render service, Supabase credentials, AI provider, or every browser interaction is healthy. Those require live runtime checks and credentials/permissions that are not available to the repository workflow.
 
 ## Release log
+
+### 2026-11-01 — Aggregate workspace metrics endpoint
+- Added authenticated `GET /api/agents/summary` with database-side counts for active agents and successful tasks, scoped to the current user.
+- Replaced the dashboard's per-agent task-history fan-out with one summary request, avoiding N+1 HTTP requests and ensuring successful-task totals are not truncated by the per-agent 50-item history limit.
+- Added API assertions for empty summaries, successful task counts and owner isolation.
+- Backend and frontend CI are required; no production deployment or merge is performed from this branch.
+- Rollback: revert the summary endpoint, its tests and the dashboard consumer together.
+
+
+### 2026-11-01 — Workspace dashboard live metrics
+- Replaced the misleading dashboard preview label with workspace wording for authenticated users.
+- Dashboard overview now fetches the signed-in user's agents and their persisted task histories through owner-scoped API routes.
+- Active-agent and successful-task counters now display actual API-derived values; they show a neutral placeholder when data cannot be verified rather than fabricated zeroes.
+- Added loading/sync feedback and kept the unauthenticated local preview clearly labelled.
+- Frontend CI is triggered by this change; no local build or production deployment is claimed.
+- Change is isolated on `feat/landing-page-product-clarity`; rollback is a revert of the dashboard commit.
+
+
+### 2026-11-01 — Landing page product-scope clarity (branch validation pending)
+- Replaced promotional copy that implied tool integrations and complex autonomous execution with an accurate description of the current bounded MVP.
+- Added bilingual responsive cards for agent management, single-step supervised runs, and persistent project/conversation/task history.
+- Added an explicit note that external tools and multi-step workflows remain roadmap items.
+- Fixed the primary landing-page CTA so signed-out visitors are sent to authentication instead of the protected dashboard.
+- Added a dedicated GitHub Actions frontend build workflow for pull requests; it runs TypeScript checking and the Vite production build on Node 22.
+- Latest production smoke on `main` (run [41267114702](https://github.com/Amir1489/agentic-ai-platform/actions/runs/41267114702), 2026-11-01) passed the deployed frontend, API health, and database readiness checks. The capability endpoint reported `chat: false` and `agent_tasks: false`; live AI execution is therefore unavailable until the owner configures a provider privately.
+- The frontend build workflow also runs on `feat/**` branches so this PR can receive a TypeScript/Vite build result before review.
+- Changes are isolated on `feat/landing-page-product-clarity`; no merge or production deployment has occurred. Frontend CI is pending.
+- Rollback: revert the commits on this feature branch; `main` and the live site remain unchanged.
+
 
 ### 2026-10-31 — Production AI capability check
 - Added a secret-safe smoke check for `/api/capabilities`.

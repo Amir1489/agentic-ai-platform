@@ -99,3 +99,19 @@ body,.app,.welcome-page,.dash{background-color:var(--user-background)!important;
 :root[data-theme="dark"] .badge,:root[data-theme="dark"] .secondary,:root[data-theme="dark"] .welcome-language,:root[data-theme="dark"] .welcome-language button,:root[data-theme="dark"] .palette-reset,:root[data-theme="dark"] .palette-preset{background:var(--user-accent-soft)!important;color:var(--user-text)!important}
 :root[data-theme="dark"] .dash-nav.active{background:var(--user-accent-soft)!important;color:var(--user-accent)!important}
 :root[data-theme="dark"] .brand-icon,:root[data-theme="dark"] .auth-symbol,:root[data-theme="dark"] .welcome-mark,:root[data-theme="dark"] .sparkle,:root[data-theme="dark"] .dash-project-icon,:root[data-theme="dark"] .chat-item.active,:root[data-theme="dark"] .chat-bubble.user,:root[data-theme="dark"] .dash-avatar{background:var(--user-accent-soft)!important;color:var(--user-accent)!important}
+
+
+/* Honest, bilingual product-scope section on the public landing page. */
+.scope-section{width:min(1180px,calc(100% - 48px));margin:10px auto 70px;padding:34px 0 20px;scroll-margin-top:28px}
+.scope-heading{text-align:center;max-width:720px;margin:0 auto 28px}
+.scope-heading .badge{margin-bottom:8px}
+.scope-heading h2{font-size:clamp(26px,3vw,38px);margin:12px 0;color:var(--user-text)}
+.scope-heading>p{line-height:1.9;color:color-mix(in srgb,var(--user-text) 70%,var(--user-background))}
+.scope-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.scope-card{padding:25px;border-radius:23px;min-height:190px}
+.scope-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--user-accent-soft);color:var(--user-accent)}
+.scope-card h3{font-size:18px;margin:17px 0 8px;color:var(--user-text)}
+.scope-card p{font-size:14px;line-height:1.9;margin:0;color:color-mix(in srgb,var(--user-text) 72%,var(--user-background))}
+.scope-note{max-width:900px;margin:22px auto 0;padding:15px 19px;border:1px solid var(--user-border);border-radius:16px;background:var(--user-accent-soft);color:var(--user-text);font-size:13px;line-height:1.9;text-align:center}
+@media(max-width:850px){.scope-section{margin-top:0}.scope-grid{grid-template-columns:1fr;max-width:620px;margin:auto}.scope-card{min-height:0;text-align:start}}
+@media(max-width:520px){.scope-section{width:calc(100% - 32px);margin-bottom:42px;padding-top:16px}.scope-card{padding:20px}.scope-heading h2{font-size:27px}.scope-note{font-size:12px}}

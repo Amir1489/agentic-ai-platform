@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DBSession
 from .auth import current_session
 from .database import get_db
@@ -37,6 +37,18 @@ def owned_agent(agent_id: int, user_id: int, db: DBSession):
 def list_agents(auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
     rows = db.scalars(select(Agent).where(Agent.owner_id == auth[0].id).order_by(Agent.updated_at.desc())).all()
     return [serialize(row) for row in rows]
+
+@router.get("/summary")
+def agent_summary(auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
+    """Return aggregate counts for the authenticated user's workspace."""
+    user_id = auth[0].id
+    active_agents = db.scalar(select(func.count(Agent.id)).where(
+        Agent.owner_id == user_id, Agent.status == "active"
+    )) or 0
+    successful_tasks = db.scalar(select(func.count(AgentTask.id)).where(
+        AgentTask.owner_id == user_id, AgentTask.status == "succeeded"
+    )) or 0
+    return {"active_agents": active_agents, "successful_tasks": successful_tasks}
 
 @router.post("", status_code=201)
 def create_agent(data: AgentInput, auth: tuple[User, LoginSession] = Depends(current_session), db: DBSession = Depends(get_db)):
